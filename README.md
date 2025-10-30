@@ -5,19 +5,21 @@ A complete massage therapy business website with online booking system and admin
 ## Features
 
 ### Client-Facing Features
-
 - **Homepage**: Relaxing design with hero section, service previews, and about section
 - **Services Page**: Detailed service descriptions, pricing, and package deals
 - **About Page**: Business story, team information, and customer testimonials
 - **Contact Page**: Contact information, interactive contact form, and FAQ section
 - **Online Booking System**: 4-step booking process with service selection, date/time picker, customer details, and payment options
+- **Role-Based Login**: Separate client and admin access with different features
+- **Client Portal**: Personal dashboard for customers to manage appointments and view wellness journey
 
 ### Admin Features
-
 - **Dashboard**: Overview stats, quick actions, and recent activity
 - **Booking Management**: View, edit, and manage all bookings with filtering options
 - **Customer Management**: Customer database with booking history
 - **Message Management**: Handle contact form submissions
+- **Settings**: Business hours, pricing, and data management
+- **Tablet Optimization**: Admin interface specifically designed for tablet use
 - **Settings**: Business hours, pricing, and data management
 
 ## Technology Stack
@@ -151,7 +153,6 @@ The website is specifically optimized for tablet use in the admin dashboard:
 ## License
 
 This project is created for demonstration purposes. All rights reserved to Massage2Wellness.
-
 ---
 
 **Note**: This is a demo website using LocalStorage for data persistence. In a production environment, you would need to integrate with a backend database and payment processing system.
