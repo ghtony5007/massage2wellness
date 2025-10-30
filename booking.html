@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment - Massage2Wellness</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;600&family=Open+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation Placeholder -->
+    <div id="nav-placeholder"></div>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <h1>Book Your Appointment</h1>
+            <p>Schedule your perfect massage experience in just a few simple steps</p>
+        </div>
+    </section>
+
+    <!-- Booking System -->
+    <section class="booking-section">
+        <div class="container">
+            <div class="booking-container">
+                <!-- Progress Indicator -->
+                <div class="booking-progress">
+                    <div class="progress-step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <div class="step-label">Service</div>
+                    </div>
+                    <div class="progress-step" data-step="2">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Date & Time</div>
+                    </div>
+                    <div class="progress-step" data-step="3">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Details</div>
+                    </div>
+                    <div class="progress-step" data-step="4">
+                        <div class="step-number">4</div>
+                        <div class="step-label">Payment</div>
+                    </div>
+                </div>
+
+                <!-- Booking Form -->
+                <form id="booking-form" class="booking-form">
+                    <!-- Step 1: Service Selection -->
+                    <div class="booking-step active" id="step-1">
+                        <h2>Choose Your Service</h2>
+                        <div class="services-selection">
+                            <div class="service-option" data-service="swedish" data-price="80" data-duration="60">
+                                <div class="service-header">
+                                    <i class="fas fa-spa"></i>
+                                    <h3>Swedish Massage</h3>
+                                </div>
+                                <p>Classic relaxation massage using long, flowing strokes</p>
+                                <div class="service-details">
+                                    <span class="duration">60 min</span>
+                                    <span class="price">$80</span>
+                                </div>
+                            </div>
+
+                            <div class="service-option" data-service="deep-tissue" data-price="95" data-duration="60">
+                                <div class="service-header">
+                                    <i class="fas fa-hand-paper"></i>
+                                    <h3>Deep Tissue Massage</h3>
+                                </div>
+                                <p>Therapeutic massage targeting muscle tension and knots</p>
+                                <div class="service-details">
+                                    <span class="duration">60 min</span>
+                                    <span class="price">$95</span>
+                                </div>
+                            </div>
+
+                            <div class="service-option" data-service="hot-stone" data-price="110" data-duration="75">
+                                <div class="service-header">
+                                    <i class="fas fa-fire"></i>
+                                    <h3>Hot Stone Massage</h3>
+                                </div>
+                                <p>Relaxing massage with heated stones for deeper relaxation</p>
+                                <div class="service-details">
+                                    <span class="duration">75 min</span>
+                                    <span class="price">$110</span>
+                                </div>
+                            </div>
+
+                            <div class="service-option" data-service="prenatal" data-price="85" data-duration="60">
+                                <div class="service-header">
+                                    <i class="fas fa-heart"></i>
+                                    <h3>Prenatal Massage</h3>
+                                </div>
+                                <p>Gentle, specialized massage for expectant mothers</p>
+                                <div class="service-details">
+                                    <span class="duration">60 min</span>
+                                    <span class="price">$85</span>
+                                </div>
+                            </div>
+
+                            <div class="service-option" data-service="couples" data-price="170" data-duration="60">
+                                <div class="service-header">
+                                    <i class="fas fa-users"></i>
+                                    <h3>Couples Massage</h3>
+                                </div>
+                                <p>Share the relaxation experience with your partner</p>
+                                <div class="service-details">
+                                    <span class="duration">60 min</span>
+                                    <span class="price">$170</span>
+                                </div>
+                            </div>
+
+                            <div class="service-option" data-service="aromatherapy" data-price="90" data-duration="60">
+                                <div class="service-header">
+                                    <i class="fas fa-leaf"></i>
+                                    <h3>Aromatherapy Massage</h3>
+                                </div>
+                                <p>Combines massage with essential oils for enhanced relaxation</p>
+                                <div class="service-details">
+                                    <span class="duration">60 min</span>
+                                    <span class="price">$90</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Add-ons -->
+                        <div class="addons-selection">
+                            <h3>Enhance Your Experience (Optional)</h3>
+                            <div class="addon-options">
+                                <label class="addon-option">
+                                    <input type="checkbox" name="addons" value="essential-oils" data-price="15">
+                                    <span class="addon-info">
+                                        <span class="addon-name">Essential Oil Upgrade</span>
+                                        <span class="addon-price">+$15</span>
+                                    </span>
+                                </label>
+                                <label class="addon-option">
+                                    <input type="checkbox" name="addons" value="hot-towel" data-price="10">
+                                    <span class="addon-info">
+                                        <span class="addon-name">Hot Towel Treatment</span>
+                                        <span class="addon-price">+$10</span>
+                                    </span>
+                                </label>
+                                <label class="addon-option">
+                                    <input type="checkbox" name="addons" value="cold-stone" data-price="20">
+                                    <span class="addon-info">
+                                        <span class="addon-name">Cold Stone Therapy</span>
+                                        <span class="addon-price">+$20</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="step-navigation">
+                            <button type="button" class="btn btn-primary" onclick="nextStep()">Continue</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Date & Time Selection -->
+                    <div class="booking-step" id="step-2">
+                        <h2>Select Date & Time</h2>
+                        <div class="datetime-selection">
+                            <div class="date-selection">
+                                <h3>Choose Date</h3>
+                                <input type="date" id="appointment-date" name="date" required>
+                                <div class="date-info">
+                                    <p><i class="fas fa-info-circle"></i> Appointments available up to 30 days in advance</p>
+                                </div>
+                            </div>
+
+                            <div class="time-selection">
+                                <h3>Available Times</h3>
+                                <div class="time-slots" id="time-slots">
+                                    <!-- Time slots will be populated by JavaScript -->
+                                </div>
+                            </div>
+
+                            <div class="therapist-selection">
+                                <h3>Preferred Therapist (Optional)</h3>
+                                <select id="therapist" name="therapist">
+                                    <option value="">No preference</option>
+                                    <option value="sarah">Sarah Johnson - Lead Therapist</option>
+                                    <option value="michael">Michael Chen - Therapeutic Specialist</option>
+                                    <option value="emily">Emily Rodriguez - Wellness Therapist</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="step-navigation">
+                            <button type="button" class="btn btn-secondary" onclick="previousStep()">Back</button>
+                            <button type="button" class="btn btn-primary" onclick="nextStep()">Continue</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Personal Details -->
+                    <div class="booking-step" id="step-3">
+                        <h2>Your Information</h2>
+                        <div class="personal-details">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="firstName">First Name *</label>
+                                    <input type="text" id="firstName" name="firstName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="lastName">Last Name *</label>
+                                    <input type="text" id="lastName" name="lastName" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="email">Email *</label>
+                                    <input type="email" id="email" name="email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="phone">Phone *</label>
+                                    <input type="tel" id="phone" name="phone" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="specialRequests">Special Requests or Health Concerns</label>
+                                <textarea id="specialRequests" name="specialRequests" rows="4" placeholder="Please let us know about any injuries, allergies, or specific areas you'd like us to focus on..."></textarea>
+                            </div>
+
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="firstTime" name="firstTime">
+                                    <span class="checkmark"></span>
+                                    This is my first visit to Massage2Wellness
+                                </label>
+                            </div>
+
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="emailUpdates" name="emailUpdates">
+                                    <span class="checkmark"></span>
+                                    I'd like to receive wellness tips and special offers
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="step-navigation">
+                            <button type="button" class="btn btn-secondary" onclick="previousStep()">Back</button>
+                            <button type="button" class="btn btn-primary" onclick="nextStep()">Continue</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Payment -->
+                    <div class="booking-step" id="step-4">
+                        <h2>Payment & Confirmation</h2>
+                        
+                        <!-- Booking Summary -->
+                        <div class="booking-summary">
+                            <h3>Booking Summary</h3>
+                            <div class="summary-item">
+                                <span class="summary-label">Service:</span>
+                                <span class="summary-value" id="summary-service">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Date:</span>
+                                <span class="summary-value" id="summary-date">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Time:</span>
+                                <span class="summary-value" id="summary-time">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Duration:</span>
+                                <span class="summary-value" id="summary-duration">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Therapist:</span>
+                                <span class="summary-value" id="summary-therapist">No preference</span>
+                            </div>
+                            <div class="summary-addons" id="summary-addons"></div>
+                            <div class="summary-total">
+                                <span class="summary-label">Total:</span>
+                                <span class="summary-value" id="summary-total">$0</span>
+                            </div>
+                        </div>
+
+                        <!-- Payment Options -->
+                        <div class="payment-section">
+                            <h3>Payment Method</h3>
+                            <div class="payment-options">
+                                <label class="payment-option">
+                                    <input type="radio" name="paymentMethod" value="card" checked>
+                                    <span class="payment-info">
+                                        <i class="fas fa-credit-card"></i>
+                                        <span>Credit/Debit Card</span>
+                                    </span>
+                                </label>
+                                <label class="payment-option">
+                                    <input type="radio" name="paymentMethod" value="paypal">
+                                    <span class="payment-info">
+                                        <i class="fab fa-paypal"></i>
+                                        <span>PayPal</span>
+                                    </span>
+                                </label>
+                                <label class="payment-option">
+                                    <input type="radio" name="paymentMethod" value="pay-later">
+                                    <span class="payment-info">
+                                        <i class="fas fa-clock"></i>
+                                        <span>Pay at Appointment</span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Card Payment Form -->
+                            <div class="payment-form" id="card-payment-form">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="cardNumber">Card Number</label>
+                                        <input type="text" id="cardNumber" name="cardNumber" placeholder="1234 5678 9012 3456">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="expiryDate">Expiry Date</label>
+                                        <input type="text" id="expiryDate" name="expiryDate" placeholder="MM/YY">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cvv">CVV</label>
+                                        <input type="text" id="cvv" name="cvv" placeholder="123">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cardName">Name on Card</label>
+                                    <input type="text" id="cardName" name="cardName" placeholder="John Doe">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Terms and Conditions -->
+                        <div class="terms-section">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="termsAccepted" name="termsAccepted" required>
+                                <span class="checkmark"></span>
+                                I agree to the <a href="#" target="_blank">Terms & Conditions</a> and <a href="#" target="_blank">Cancellation Policy</a>
+                            </label>
+                        </div>
+
+                        <div class="step-navigation">
+                            <button type="button" class="btn btn-secondary" onclick="previousStep()">Back</button>
+                            <button type="submit" class="btn btn-primary">Complete Booking</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Placeholder -->
+    <div id="footer-placeholder"></div>
+
+    <script src="scripts/components.js"></script>
+    <script src="scripts/main.js"></script>
+    <script src="scripts/booking.js"></script>
+</body>
+</html>

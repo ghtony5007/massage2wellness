@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Massage2Wellness</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;600&family=Open+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="admin-body">
+    <!-- Admin Navigation -->
+    <nav class="admin-navbar">
+        <div class="admin-nav-container">
+            <div class="admin-logo">
+                <i class="fas fa-spa"></i>
+                <span>Massage2Wellness Admin</span>
+            </div>
+            <div class="admin-nav-menu">
+                <a href="#dashboard" class="admin-nav-link active" data-tab="dashboard">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="#bookings" class="admin-nav-link" data-tab="bookings">
+                    <i class="fas fa-calendar-alt"></i> Bookings
+                </a>
+                <a href="#customers" class="admin-nav-link" data-tab="customers">
+                    <i class="fas fa-users"></i> Customers
+                </a>
+                <a href="#messages" class="admin-nav-link" data-tab="messages">
+                    <i class="fas fa-envelope"></i> Messages
+                </a>
+                <a href="#settings" class="admin-nav-link" data-tab="settings">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+            </div>
+            <div class="admin-profile">
+                <div class="profile-info">
+                    <span class="profile-name">Admin User</span>
+                    <span class="profile-role">Administrator</span>
+                </div>
+                <div class="profile-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <a href="index.html" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Admin Content -->
+    <main class="admin-main">
+        <!-- Dashboard Tab -->
+        <section id="dashboard" class="admin-tab active">
+            <div class="admin-header">
+                <h1>Dashboard Overview</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="todayBookings">0</h3>
+                        <p>Today's Bookings</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-week"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="weekBookings">0</h3>
+                        <p>This Week</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="weekRevenue">$0</h3>
+                        <p>Week Revenue</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalCustomers">0</h3>
+                        <p>Total Customers</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h2>Quick Actions</h2>
+                <div class="actions-grid">
+                    <button class="action-btn" onclick="showTab('bookings')">
+                        <i class="fas fa-plus"></i>
+                        <span>Add Booking</span>
+                    </button>
+                    <button class="action-btn" onclick="showTab('customers')">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Add Customer</span>
+                    </button>
+                    <button class="action-btn" onclick="showTab('messages')">
+                        <i class="fas fa-envelope-open"></i>
+                        <span>View Messages</span>
+                    </button>
+                    <button class="action-btn" onclick="generateReport()">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Generate Report</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="recent-activity">
+                <h2>Recent Activity</h2>
+                <div class="activity-list" id="recentActivity">
+                    <!-- Activity items will be populated by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Bookings Tab -->
+        <section id="bookings" class="admin-tab">
+            <div class="admin-header">
+                <h1>Booking Management</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="exportBookings()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                    <button class="btn btn-primary" onclick="showAddBookingModal()">
+                        <i class="fas fa-plus"></i> Add Booking
+                    </button>
+                </div>
+            </div>
+
+            <!-- Booking Filters -->
+            <div class="booking-filters">
+                <div class="filter-group">
+                    <label>Date Range:</label>
+                    <input type="date" id="filterStartDate">
+                    <span>to</span>
+                    <input type="date" id="filterEndDate">
+                </div>
+                <div class="filter-group">
+                    <label>Status:</label>
+                    <select id="filterStatus">
+                        <option value="">All Status</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="pending">Pending</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Service:</label>
+                    <select id="filterService">
+                        <option value="">All Services</option>
+                        <option value="swedish">Swedish Massage</option>
+                        <option value="deep-tissue">Deep Tissue</option>
+                        <option value="hot-stone">Hot Stone</option>
+                        <option value="prenatal">Prenatal</option>
+                        <option value="couples">Couples</option>
+                        <option value="aromatherapy">Aromatherapy</option>
+                    </select>
+                </div>
+                <button class="btn btn-secondary" onclick="applyFilters()">Apply Filters</button>
+                <button class="btn btn-outline" onclick="clearFilters()">Clear</button>
+            </div>
+
+            <!-- Bookings Table -->
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Customer</th>
+                            <th>Service</th>
+                            <th>Date & Time</th>
+                            <th>Status</th>
+                            <th>Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingsTable">
+                        <!-- Booking rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Customers Tab -->
+        <section id="customers" class="admin-tab">
+            <div class="admin-header">
+                <h1>Customer Management</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="exportCustomers()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                    <button class="btn btn-primary" onclick="showAddCustomerModal()">
+                        <i class="fas fa-user-plus"></i> Add Customer
+                    </button>
+                </div>
+            </div>
+
+            <!-- Customer Search -->
+            <div class="search-container">
+                <input type="text" id="customerSearch" placeholder="Search customers by name, email, or phone...">
+                <button class="btn btn-secondary" onclick="searchCustomers()">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+
+            <!-- Customers Table -->
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Total Bookings</th>
+                            <th>Last Visit</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customersTable">
+                        <!-- Customer rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Messages Tab -->
+        <section id="messages" class="admin-tab">
+            <div class="admin-header">
+                <h1>Contact Messages</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="markAllRead()">
+                        <i class="fas fa-check-double"></i> Mark All Read
+                    </button>
+                </div>
+            </div>
+
+            <!-- Message Filters -->
+            <div class="message-filters">
+                <div class="filter-group">
+                    <label>Status:</label>
+                    <select id="messageStatus">
+                        <option value="">All Messages</option>
+                        <option value="new">New</option>
+                        <option value="read">Read</option>
+                        <option value="responded">Responded</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Subject:</label>
+                    <select id="messageSubject">
+                        <option value="">All Subjects</option>
+                        <option value="appointment">Appointment Inquiry</option>
+                        <option value="services">Services Information</option>
+                        <option value="pricing">Pricing Questions</option>
+                        <option value="feedback">Feedback</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <button class="btn btn-secondary" onclick="filterMessages()">Apply Filters</button>
+            </div>
+
+            <!-- Messages List -->
+            <div class="messages-container" id="messagesContainer">
+                <!-- Messages will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Settings Tab -->
+        <section id="settings" class="admin-tab">
+            <div class="admin-header">
+                <h1>Settings</h1>
+            </div>
+
+            <div class="settings-grid">
+                <!-- Business Hours -->
+                <div class="settings-card">
+                    <h3>Business Hours</h3>
+                    <div class="hours-settings">
+                        <div class="day-setting">
+                            <label>Monday - Friday:</label>
+                            <input type="time" value="09:00"> to <input type="time" value="20:00">
+                        </div>
+                        <div class="day-setting">
+                            <label>Saturday:</label>
+                            <input type="time" value="09:00"> to <input type="time" value="18:00">
+                        </div>
+                        <div class="day-setting">
+                            <label>Sunday:</label>
+                            <input type="time" value="10:00"> to <input type="time" value="17:00">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary">Save Hours</button>
+                </div>
+
+                <!-- Booking Settings -->
+                <div class="settings-card">
+                    <h3>Booking Settings</h3>
+                    <div class="setting-item">
+                        <label>Booking window (days ahead):</label>
+                        <input type="number" value="30" min="1" max="90">
+                    </div>
+                    <div class="setting-item">
+                        <label>Cancellation notice (hours):</label>
+                        <input type="number" value="24" min="1" max="72">
+                    </div>
+                    <div class="setting-item">
+                        <label class="checkbox-label">
+                            <input type="checkbox" checked>
+                            Allow online payments
+                        </label>
+                    </div>
+                    <button class="btn btn-primary">Save Settings</button>
+                </div>
+
+                <!-- Service Pricing -->
+                <div class="settings-card">
+                    <h3>Service Pricing</h3>
+                    <div class="pricing-settings">
+                        <div class="price-item">
+                            <label>Swedish Massage (60 min):</label>
+                            <input type="number" value="80" min="0">
+                        </div>
+                        <div class="price-item">
+                            <label>Deep Tissue (60 min):</label>
+                            <input type="number" value="95" min="0">
+                        </div>
+                        <div class="price-item">
+                            <label>Hot Stone (75 min):</label>
+                            <input type="number" value="110" min="0">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary">Update Prices</button>
+                </div>
+
+                <!-- Data Management -->
+                <div class="settings-card">
+                    <h3>Data Management</h3>
+                    <div class="data-actions">
+                        <button class="btn btn-secondary" onclick="exportAllData()">
+                            <i class="fas fa-download"></i> Export All Data
+                        </button>
+                        <button class="btn btn-outline" onclick="clearOldData()">
+                            <i class="fas fa-trash"></i> Clear Old Data
+                        </button>
+                        <button class="btn btn-primary" onclick="generateBackup()">
+                            <i class="fas fa-shield-alt"></i> Create Backup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal for Booking Details -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Booking Details</h2>
+                <span class="modal-close" onclick="closeModal('bookingModal')">&times;</span>
+            </div>
+            <div class="modal-body" id="bookingModalBody">
+                <!-- Booking details will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('bookingModal')">Close</button>
+                <button class="btn btn-primary" id="modalActionBtn">Update</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="scripts/components.js"></script>
+    <script src="scripts/main.js"></script>
+    <script src="scripts/admin.js"></script>
+</body>
+</html>

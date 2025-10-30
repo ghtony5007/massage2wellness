@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Portal - Massage2Wellness</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;600&family=Open+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation Placeholder -->
+    <div id="nav-placeholder"></div>
+
+    <!-- Client Portal -->
+    <section class="client-portal">
+        <div class="portal-container">
+            <!-- Welcome Header -->
+            <div class="portal-header">
+                <h1>Welcome to Your Portal</h1>
+                <p>Manage your appointments and wellness journey</p>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <h3 id="userName">Loading...</h3>
+                        <p id="userEmail">Loading...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Portal Navigation -->
+            <div class="portal-nav">
+                <button class="portal-nav-btn active" data-tab="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard
+                </button>
+                <button class="portal-nav-btn" data-tab="appointments">
+                    <i class="fas fa-calendar-alt"></i>
+                    My Appointments
+                </button>
+                <button class="portal-nav-btn" data-tab="profile">
+                    <i class="fas fa-user"></i>
+                    Profile
+                </button>
+                <button class="portal-nav-btn" data-tab="wellness">
+                    <i class="fas fa-heart"></i>
+                    Wellness Tips
+                </button>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div class="portal-content" id="dashboard" style="display: block;">
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="card-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="totalAppointments">0</h3>
+                            <p>Total Appointments</p>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="card-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="upcomingAppointments">0</h3>
+                            <p>Upcoming Appointments</p>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="card-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="favoriteService">Swedish Massage</h3>
+                            <p>Favorite Service</p>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="card-icon">
+                            <i class="fas fa-spa"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="wellnessScore">85%</h3>
+                            <p>Wellness Score</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <h3>Quick Actions</h3>
+                    <div class="action-buttons">
+                        <a href="booking.html" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>
+                            Book New Appointment
+                        </a>
+                        <button class="btn btn-secondary" onclick="showTab('appointments')">
+                            <i class="fas fa-calendar"></i>
+                            View Appointments
+                        </button>
+                        <button class="btn btn-accent">
+                            <i class="fas fa-gift"></i>
+                            View Packages
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="recent-activity">
+                    <h3>Recent Activity</h3>
+                    <div class="activity-list" id="recentActivity">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appointments Tab -->
+            <div class="portal-content" id="appointments" style="display: none;">
+                <div class="appointments-header">
+                    <h3>My Appointments</h3>
+                    <button class="btn btn-primary" onclick="window.location.href='booking.html'">
+                        <i class="fas fa-plus"></i>
+                        Book New
+                    </button>
+                </div>
+
+                <div class="appointments-filters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="upcoming">Upcoming</button>
+                    <button class="filter-btn" data-filter="completed">Completed</button>
+                    <button class="filter-btn" data-filter="cancelled">Cancelled</button>
+                </div>
+
+                <div class="appointments-list" id="appointmentsList">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div class="portal-content" id="profile" style="display: none;">
+                <div class="profile-section">
+                    <h3>Personal Information</h3>
+                    <form class="profile-form" id="profileForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstName">First Name</label>
+                                <input type="text" id="firstName" name="firstName" value="John">
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName">Last Name</label>
+                                <input type="text" id="lastName" name="lastName" value="Doe">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="profileEmail">Email</label>
+                                <input type="email" id="profileEmail" name="email" value="client@demo.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Phone</label>
+                                <input type="tel" id="phone" name="phone" value="(555) 123-4567">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="preferences">Massage Preferences</label>
+                            <textarea id="preferences" name="preferences" rows="3">Prefers medium pressure, no essential oils</textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                    </form>
+                </div>
+
+                <div class="preferences-section">
+                    <h3>Notification Preferences</h3>
+                    <div class="preference-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" checked>
+                            <span>Email reminders for appointments</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" checked>
+                            <span>SMS notifications</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox">
+                            <span>Marketing emails</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wellness Tab -->
+            <div class="portal-content" id="wellness" style="display: none;">
+                <div class="wellness-section">
+                    <h3>Your Wellness Journey</h3>
+                    
+                    <div class="wellness-tips">
+                        <div class="tip-card">
+                            <div class="tip-icon">
+                                <i class="fas fa-water"></i>
+                            </div>
+                            <div class="tip-content">
+                                <h4>Stay Hydrated</h4>
+                                <p>Drink plenty of water after your massage to help flush out toxins and maintain the benefits.</p>
+                            </div>
+                        </div>
+
+                        <div class="tip-card">
+                            <div class="tip-icon">
+                                <i class="fas fa-moon"></i>
+                            </div>
+                            <div class="tip-content">
+                                <h4>Rest & Recovery</h4>
+                                <p>Allow your body time to rest after a massage. Light activity is fine, but avoid strenuous exercise.</p>
+                            </div>
+                        </div>
+
+                        <div class="tip-card">
+                            <div class="tip-icon">
+                                <i class="fas fa-leaf"></i>
+                            </div>
+                            <div class="tip-content">
+                                <h4>Regular Sessions</h4>
+                                <p>For best results, maintain regular massage sessions based on your wellness goals and lifestyle.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="wellness-tracker">
+                        <h4>Wellness Tracker</h4>
+                        <div class="tracker-metrics">
+                            <div class="metric">
+                                <span class="metric-label">Stress Level</span>
+                                <div class="metric-bar">
+                                    <div class="metric-fill" style="width: 30%"></div>
+                                </div>
+                                <span class="metric-value">Low</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Energy Level</span>
+                                <div class="metric-bar">
+                                    <div class="metric-fill" style="width: 80%"></div>
+                                </div>
+                                <span class="metric-value">High</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Sleep Quality</span>
+                                <div class="metric-bar">
+                                    <div class="metric-fill" style="width: 75%"></div>
+                                </div>
+                                <span class="metric-value">Good</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Placeholder -->
+    <div id="footer-placeholder"></div>
+
+    <script src="scripts/components.js"></script>
+    <script src="scripts/login.js"></script>
+    <script src="scripts/client-portal.js"></script>
+    <script src="scripts/main.js"></script>
+    <script src="scripts/client-portal.js"></script>
+    <script src="scripts/main.js"></script>
+</body>
+</html>
