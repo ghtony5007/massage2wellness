@@ -26,6 +26,7 @@ body {
     line-height: 1.6;
     color: var(--text-dark);
     background-color: var(--background-light);
+    padding-top: 60px;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -3747,7 +3748,7 @@ html {
 .forgot-password {
     margin-top: 1rem;
 }
-
+ 
 /* Login Messages */
 .login-message {
     padding: 1rem;
@@ -3773,7 +3774,7 @@ html {
 /* Client Portal */
 .client-portal {
     min-height: calc(100vh - 80px);
-    padding: 2rem 0;
+    padding: 1rem 0;
     background: var(--background-color);
 }
 
