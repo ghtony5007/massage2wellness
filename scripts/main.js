@@ -1,30 +1,6 @@
 // Main JavaScript for Massage2Wellness website
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Mobile navigation toggle
-    const hamburger = document.getElementById('hamburger');
-    const navMenu = document.getElementById('nav-menu');
-
-    if (hamburger && navMenu) {
-        hamburger.addEventListener('click', function() {
-            navMenu.classList.toggle('active');
-            
-            // Animate hamburger bars
-            hamburger.classList.toggle('active');
-        });
-
-        // Close mobile menu when clicking on a link
-        const navLinks = document.querySelectorAll('.nav-link');
-        if (navLinks.length > 0) {
-            navLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    navMenu.classList.remove('active');
-                    hamburger.classList.remove('active');
-                });
-            });
-        }
-    }
-
     // Smooth scrolling for anchor links
     const anchorLinks = document.querySelectorAll('a[href^="#"]');
     anchorLinks.forEach(link => {
@@ -43,16 +19,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Navbar background on scroll - only if navbar exists
+    // Navbar background on scroll (throttled via requestAnimationFrame)
     const navbar = document.querySelector('.navbar');
     if (navbar) {
+        let ticking = false;
         window.addEventListener('scroll', function() {
-            if (window.scrollY > 50) {
-                navbar.style.backgroundColor = 'rgba(250, 249, 247, 0.98)';
-                navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
-            } else {
-                navbar.style.backgroundColor = 'rgba(250, 249, 247, 0.95)';
-                navbar.style.boxShadow = 'none';
+            if (!ticking) {
+                requestAnimationFrame(function() {
+                    if (window.scrollY > 50) {
+                        navbar.style.backgroundColor = 'rgba(250, 249, 247, 0.98)';
+                        navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
+                    } else {
+                        navbar.style.backgroundColor = 'rgba(250, 249, 247, 0.95)';
+                        navbar.style.boxShadow = 'none';
+                    }
+                    ticking = false;
+                });
+                ticking = true;
             }
         });
     }

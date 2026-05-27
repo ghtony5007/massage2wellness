@@ -7,18 +7,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeAdmin() {
-    // Check if user is authenticated (simple check for demo)
-    const isAdmin = localStorage.getItem('admin_authenticated');
-    if (!isAdmin) {
-        // Simple password check for demo purposes
-        const password = prompt('Enter admin password:');
-        if (password === 'admin123') {
-            localStorage.setItem('admin_authenticated', 'true');
-        } else {
-            alert('Access denied');
-            window.location.href = 'index.html';
-            return;
-        }
+    // Check if user is authenticated via login session
+    if (!window.UserSession || !window.UserSession.isAdmin()) {
+        window.location.href = 'login.html';
+        return;
     }
     
     // Set up date filters with default values
@@ -82,9 +74,16 @@ function showTab(tabName) {
     }
 }
 
-function loadDashboardData() {
-    const bookings = window.bookingSystem.getBookings();
-    const messages = JSON.parse(localStorage.getItem('contact_messages')) || [];
+async function loadDashboardData() {
+    let bookings = [], messages = [];
+    try {
+        [bookings, messages] = await Promise.all([
+            window.firebaseService.getBookings(),
+            window.firebaseService.getContactMessages()
+        ]);
+    } catch (error) {
+        console.error('Error loading dashboard data:', error);
+    }
     
     // Calculate stats
     const today = new Date();
@@ -158,8 +157,13 @@ function loadRecentActivity(bookings, messages) {
     `).join('');
 }
 
-function loadBookingsData() {
-    const bookings = window.bookingSystem.getBookings();
+async function loadBookingsData() {
+    let bookings = [];
+    try {
+        bookings = await window.firebaseService.getBookings();
+    } catch (error) {
+        console.error('Error loading bookings:', error);
+    }
     const tableBody = document.getElementById('bookingsTable');
     
     tableBody.innerHTML = bookings.map(booking => `
@@ -187,8 +191,13 @@ function loadBookingsData() {
     `).join('');
 }
 
-function loadCustomersData() {
-    const bookings = window.bookingSystem.getBookings();
+async function loadCustomersData() {
+    let bookings = [];
+    try {
+        bookings = await window.firebaseService.getBookings();
+    } catch (error) {
+        console.error('Error loading customers:', error);
+    }
     const customersMap = new Map();
     
     // Aggregate customer data
@@ -240,8 +249,13 @@ function loadCustomersData() {
     `).join('');
 }
 
-function loadMessagesData() {
-    const messages = JSON.parse(localStorage.getItem('contact_messages')) || [];
+async function loadMessagesData() {
+    let messages = [];
+    try {
+        messages = await window.firebaseService.getContactMessages();
+    } catch (error) {
+        console.error('Error loading messages:', error);
+    }
     const container = document.getElementById('messagesContainer');
     
     container.innerHTML = messages.map(message => `
@@ -339,8 +353,9 @@ function refreshData() {
     showMessage('Data refreshed successfully', 'success');
 }
 
-function viewBooking(bookingId) {
-    const booking = window.bookingSystem.getBookingById(bookingId);
+async function viewBooking(bookingId) {
+    const snapshot = await window.firebaseService.db.collection('bookings').doc(bookingId).get();
+    const booking = snapshot.exists ? { id: snapshot.id, ...snapshot.data() } : null;
     if (booking) {
         const modalBody = document.getElementById('bookingModalBody');
         modalBody.innerHTML = `
@@ -381,11 +396,16 @@ function editBooking(bookingId) {
     showMessage('Edit booking functionality coming soon', 'info');
 }
 
-function cancelBooking(bookingId) {
+async function cancelBooking(bookingId) {
     if (confirm('Are you sure you want to cancel this booking?')) {
-        window.bookingSystem.updateBookingStatus(bookingId, 'cancelled');
-        loadBookingsData();
-        showMessage('Booking cancelled successfully', 'success');
+        try {
+            await window.firebaseService.updateBookingStatus(bookingId, 'cancelled');
+            loadBookingsData();
+            showMessage('Booking cancelled successfully', 'success');
+        } catch (error) {
+            console.error('Error cancelling booking:', error);
+            showMessage('Failed to cancel booking', 'error');
+        }
     }
 }
 
@@ -401,14 +421,14 @@ function createBookingForCustomer(email) {
     showMessage('Quick booking functionality coming soon', 'info');
 }
 
-function markAsRead(messageId) {
-    const messages = JSON.parse(localStorage.getItem('contact_messages')) || [];
-    const message = messages.find(msg => msg.id === messageId);
-    if (message) {
-        message.status = 'read';
-        localStorage.setItem('contact_messages', JSON.stringify(messages));
+async function markAsRead(messageId) {
+    try {
+        await window.firebaseService.db.collection('contact_messages').doc(messageId).update({ status: 'read' });
         loadMessagesData();
         showMessage('Message marked as read', 'success');
+    } catch (error) {
+        console.error('Error marking message as read:', error);
+        showMessage('Failed to update message', 'error');
     }
 }
 
@@ -443,11 +463,16 @@ function searchCustomers() {
     });
 }
 
-function exportBookings() {
-    const bookings = window.bookingSystem.getBookings();
-    const csvContent = generateCSV(bookings);
-    downloadCSV(csvContent, 'bookings.csv');
-    showMessage('Bookings exported successfully', 'success');
+async function exportBookings() {
+    try {
+        const bookings = await window.firebaseService.getBookings();
+        const csvContent = generateCSV(bookings);
+        downloadCSV(csvContent, 'bookings.csv');
+        showMessage('Bookings exported successfully', 'success');
+    } catch (error) {
+        console.error('Error exporting bookings:', error);
+        showMessage('Failed to export bookings', 'error');
+    }
 }
 
 function exportCustomers() {
@@ -495,11 +520,17 @@ function closeModal(modalId) {
 }
 
 // Settings functions
-function exportAllData() {
-    const data = {
-        bookings: window.bookingSystem.getBookings(),
-        messages: JSON.parse(localStorage.getItem('contact_messages')) || []
-    };
+async function exportAllData() {
+    let bookings = [], messages = [];
+    try {
+        [bookings, messages] = await Promise.all([
+            window.firebaseService.getBookings(),
+            window.firebaseService.getContactMessages()
+        ]);
+    } catch (error) {
+        console.error('Error fetching data for export:', error);
+    }
+    const data = { bookings, messages };
     
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = window.URL.createObjectURL(blob);

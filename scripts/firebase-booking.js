@@ -29,8 +29,8 @@ class FirebaseBookingSystem {
 
     async getBookingById(id) {
         try {
-            const bookings = await this.getBookings();
-            return bookings.find(booking => booking.id === id);
+            const doc = await this.firebaseService.db.collection('bookings').doc(id).get();
+            return doc.exists ? { id: doc.id, ...doc.data() } : null;
         } catch (error) {
             console.error('Failed to get booking:', error);
             return null;

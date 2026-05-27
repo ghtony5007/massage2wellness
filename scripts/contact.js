@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const contactForm = document.getElementById('contact-form');
     
     if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
+        contactForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             // Get form data
@@ -29,22 +29,17 @@ document.addEventListener('DOMContentLoaded', function() {
             // Show loading state
             const submitButton = contactForm.querySelector('button[type="submit"]');
             const hideLoading = showLoading(submitButton);
-            
-            // Simulate form submission (replace with actual API call)
-            setTimeout(() => {
-                // Save contact message to localStorage (for demo purposes)
-                saveContactMessage(data);
-                
-                // Hide loading and show success message
+
+            try {
+                await window.firebaseService.saveContactMessage(data);
                 hideLoading();
                 showMessage('Thank you for your message! We\'ll get back to you within 24 hours.', 'success');
-                
-                // Reset form
                 contactForm.reset();
-                
-                // Optional: redirect to thank you page
-                // window.location.href = 'thank-you.html';
-            }, 1500);
+            } catch (error) {
+                console.error('Error sending message:', error);
+                hideLoading();
+                showMessage('Failed to send message. Please try again.', 'error');
+            }
         });
     }
 });
@@ -80,35 +75,15 @@ function validateContactForm(data) {
 }
 
 function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 function isValidPhone(phone) {
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
     const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
-    return phoneRegex.test(cleanPhone) && cleanPhone.length >= 10;
+    return /^[\+]?[1-9][\d]{0,15}$/.test(cleanPhone) && cleanPhone.length >= 10;
 }
 
-function saveContactMessage(data) {
-    // Get existing messages
-    const messages = JSON.parse(localStorage.getItem('contact_messages')) || [];
-    
-    // Add new message
-    const message = {
-        id: Date.now().toString(),
-        ...data,
-        timestamp: new Date().toISOString(),
-        status: 'new'
-    };
-    
-    messages.push(message);
-    
-    // Save back to localStorage
-    localStorage.setItem('contact_messages', JSON.stringify(messages));
-    
-    return message;
-}
+function saveContactMessage() {} // kept for compatibility — data now saved via Firebase
 
 // FAQ toggle functionality
 document.addEventListener('DOMContentLoaded', function() {

@@ -16,8 +16,6 @@ const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-console.log('Firebase initialized successfully');
-
 // Export for global use
 window.firebaseApp = app;
 window.firebaseDb = db;
