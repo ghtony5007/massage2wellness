@@ -1,0 +1,17 @@
+{
+  "name": "massage2wellness",
+  "version": "1.0.0",
+  "description": "Massage2Wellness - massage therapy website with booking system",
+  "scripts": {
+    "dev": "npx serve . -l 3000",
+    "start": "npx serve . -l 3000",
+    "deploy": "firebase deploy --only hosting"
+  },
+  "keywords": ["massage", "wellness", "booking"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "firebase-tools": "^13.0.0",
+    "serve": "^14.0.0"
+  }
+}

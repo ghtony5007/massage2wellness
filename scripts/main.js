@@ -15,12 +15,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Close mobile menu when clicking on a link
         const navLinks = document.querySelectorAll('.nav-link');
-        navLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                navMenu.classList.remove('active');
-                hamburger.classList.remove('active');
+        if (navLinks.length > 0) {
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    navMenu.classList.remove('active');
+                    hamburger.classList.remove('active');
+                });
             });
-        });
+        }
     }
 
     // Smooth scrolling for anchor links
@@ -41,17 +43,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Navbar background on scroll
+    // Navbar background on scroll - only if navbar exists
     const navbar = document.querySelector('.navbar');
-    window.addEventListener('scroll', function() {
-        if (window.scrollY > 50) {
-            navbar.style.backgroundColor = 'rgba(250, 249, 247, 0.98)';
-            navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
-        } else {
-            navbar.style.backgroundColor = 'rgba(250, 249, 247, 0.95)';
-            navbar.style.boxShadow = 'none';
-        }
-    });
+    if (navbar) {
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 50) {
+                navbar.style.backgroundColor = 'rgba(250, 249, 247, 0.98)';
+                navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
+            } else {
+                navbar.style.backgroundColor = 'rgba(250, 249, 247, 0.95)';
+                navbar.style.boxShadow = 'none';
+            }
+        });
+    }
 
     // Intersection Observer for animations
     const observerOptions = {
@@ -70,12 +74,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Observe elements for animation
     const animatedElements = document.querySelectorAll('.service-card, .about-text, .hero-text');
-    animatedElements.forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(30px)';
-        el.style.transition = 'all 0.8s ease-out';
-        observer.observe(el);
-    });
+    if (animatedElements.length > 0) {
+        animatedElements.forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'all 0.8s ease-out';
+            observer.observe(el);
+        });
+    }
 
     // Form validation helper functions
     window.validateForm = function(formData) {

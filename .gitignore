@@ -31,6 +31,9 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
+# Firebase cache
+.firebase/
+
 # dotenv environment variables file
 .env
 .env.local
