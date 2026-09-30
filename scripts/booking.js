@@ -14,17 +14,31 @@ let bookingData = {
 document.addEventListener('DOMContentLoaded', function() {
     initializeBookingSystem();
     setupServiceSelection();
-    setupDateSelection();
     setupPaymentMethods();
     setupFormSubmission();
-    
-    // Check for pre-selected service from URL
+    prefillLoggedInUser();
+
     const urlParams = new URLSearchParams(window.location.search);
     const preSelectedService = urlParams.get('service');
     if (preSelectedService) {
         selectService(preSelectedService);
     }
 });
+
+// Pre-fill step-3 fields only for logged-in clients (not admins booking on behalf of customers)
+function prefillLoggedInUser() {
+    if (!window.firebaseAuth) return;
+    window.firebaseAuth.onAuthStateChanged(async (user) => {
+        if (!user) return;
+        const profile = await window.firebaseService?.getUserProfile(user.uid);
+        if (profile?.role !== 'client') return;
+        const fill = (id, val) => { const el = document.getElementById(id); if (el && !el.value) el.value = val || ''; };
+        fill('email',     user.email);
+        fill('firstName', profile?.firstName);
+        fill('lastName',  profile?.lastName);
+        fill('phone',     profile?.phone);
+    });
+}
 
 function initializeBookingSystem() {
     // Set minimum date to today
@@ -37,9 +51,9 @@ function initializeBookingSystem() {
     dateInput.max = maxDate.toISOString().split('T')[0];
     
     // Add date change listener
-    dateInput.addEventListener('change', function() {
+    dateInput.addEventListener('change', async function() {
         bookingData.date = this.value;
-        loadAvailableTimeSlots(this.value);
+        await loadAvailableTimeSlots(this.value);
         updateSummary();
     });
 }
@@ -86,39 +100,31 @@ function setupServiceSelection() {
     });
 }
 
-function setupDateSelection() {
-    // Time slot selection will be handled by loadAvailableTimeSlots
-}
+async function loadAvailableTimeSlots(date) {
+    const container = document.getElementById('time-slots');
+    container.innerHTML = '<p class="no-slots">Checking availability…</p>';
 
-function loadAvailableTimeSlots(date) {
-    const timeSlotsContainer = document.getElementById('time-slots');
-    const availableSlots = window.bookingSystem.getAvailableTimeSlots(date);
-    
-    timeSlotsContainer.innerHTML = '';
-    
-    if (availableSlots.length === 0) {
-        timeSlotsContainer.innerHTML = '<p class="no-slots">No available time slots for this date. Please choose another date.</p>';
+    const slots = await window.firebaseBookingSystem.getAvailableTimeSlots(date);
+    container.innerHTML = '';
+
+    if (!slots.length) {
+        container.innerHTML = '<p class="no-slots">No available times for this date. Please choose another.</p>';
         return;
     }
-    
-    availableSlots.forEach(slot => {
-        const timeButton = document.createElement('button');
-        timeButton.type = 'button';
-        timeButton.className = 'time-slot';
-        timeButton.textContent = formatTime(slot);
-        timeButton.dataset.time = slot;
-        
-        timeButton.addEventListener('click', function() {
-            // Remove previous selection
-            document.querySelectorAll('.time-slot').forEach(btn => btn.classList.remove('selected'));
-            
-            // Select this time
+
+    slots.forEach(slot => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'time-slot';
+        btn.textContent = formatTime(slot);
+        btn.dataset.time = slot;
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.time-slot').forEach(b => b.classList.remove('selected'));
             this.classList.add('selected');
             bookingData.time = this.dataset.time;
             updateSummary();
         });
-        
-        timeSlotsContainer.appendChild(timeButton);
+        container.appendChild(btn);
     });
 }
 
@@ -277,9 +283,10 @@ function updateTotal() {
 }
 
 function updateSummary() {
-    // Update service
+    // Update service with base price included
     if (bookingData.service) {
-        document.getElementById('summary-service').textContent = bookingData.service.name;
+        document.getElementById('summary-service').textContent =
+            `${bookingData.service.name} \u2014 $${bookingData.service.price}`;
         document.getElementById('summary-duration').textContent = `${bookingData.service.duration} minutes`;
     }
     
@@ -307,137 +314,230 @@ function updateSummary() {
     
     // Update addons
     const addonsContainer = document.getElementById('summary-addons');
+    const addonsSection   = document.getElementById('summary-addons-section');
     addonsContainer.innerHTML = '';
-    bookingData.addons.forEach(addon => {
-        const addonDiv = document.createElement('div');
-        addonDiv.className = 'summary-item';
-        addonDiv.innerHTML = `
-            <span class="summary-label">${addon.name}:</span>
-            <span class="summary-value">+$${addon.price}</span>
-        `;
-        addonsContainer.appendChild(addonDiv);
-    });
-    
+
+    if (bookingData.addons.length > 0) {
+        addonsSection.style.display = '';
+        bookingData.addons.forEach(addon => {
+            const addonDiv = document.createElement('div');
+            addonDiv.className = 'summary-item';
+            addonDiv.innerHTML = `
+                <span class="summary-label">Enhancement:</span>
+                <span class="summary-value">${addon.name} (+$${addon.price})</span>
+            `;
+            addonsContainer.appendChild(addonDiv);
+        });
+    } else {
+        addonsSection.style.display = 'none';
+    }
+
     // Update total
     updateTotal();
     document.getElementById('summary-total').textContent = `$${bookingData.total}`;
 }
 
-function processBooking() {
-    // Show loading state
+async function processBooking() {
     const submitButton = document.querySelector('button[type="submit"]');
     const hideLoading = showLoading(submitButton);
-    
-    // Simulate booking processing
-    setTimeout(() => {
-        try {
-            // Create booking object
-            const booking = {
-                ...bookingData,
-                id: Date.now().toString(),
-                status: 'confirmed',
-                createdAt: new Date().toISOString()
-            };
-            
-            // Save booking
-            const savedBooking = window.bookingSystem.saveBooking(booking);
-            
-            // Hide loading
-            hideLoading();
-            
-            // Show success message
-            showMessage('Booking confirmed! You will receive a confirmation email shortly.', 'success');
-            
-            // Redirect to confirmation page (or show confirmation modal)
-            setTimeout(() => {
-                showBookingConfirmation(savedBooking);
-            }, 2000);
-            
-        } catch (error) {
-            hideLoading();
-            showMessage('There was an error processing your booking. Please try again.', 'error');
-            console.error('Booking error:', error);
-        }
-    }, 2000);
+
+    const booking = {
+        ...bookingData,
+        status: 'confirmed',
+        createdAt: new Date().toISOString(),
+        userId: window.firebaseAuth?.currentUser?.uid || null
+    };
+
+    try {
+        const savedBooking = await window.firebaseBookingSystem.saveBooking(booking);
+
+        hideLoading();
+        showMessage('Booking confirmed! You will receive a confirmation email shortly.', 'success');
+
+        setTimeout(() => {
+            showBookingConfirmation(savedBooking);
+        }, 2000);
+    } catch (error) {
+        hideLoading();
+        showMessage('There was an error processing your booking. Please try again.', 'error');
+        console.error('Booking error:', error);
+    }
 }
 
 function showBookingConfirmation(booking) {
-    // Create confirmation modal
     const modal = document.createElement('div');
     modal.className = 'booking-confirmation-modal';
     modal.innerHTML = `
         <div class="confirmation-content">
-            <div class="confirmation-header">
-                <i class="fas fa-check-circle"></i>
-                <h2>Booking Confirmed!</h2>
+            <div class="confirmation-icon">
+                <i class="fas fa-check"></i>
             </div>
+            <h2>Booking Confirmed!</h2>
+            <p class="confirmation-subtitle">Your appointment is all set. See you soon!</p>
             <div class="confirmation-details">
-                <p><strong>Confirmation Number:</strong> ${booking.id}</p>
-                <p><strong>Service:</strong> ${booking.service.name}</p>
-                <p><strong>Date:</strong> ${new Date(booking.date).toLocaleDateString()}</p>
-                <p><strong>Time:</strong> ${formatTime(booking.time)}</p>
-                <p><strong>Total:</strong> $${booking.total}</p>
+                <div class="confirmation-row">
+                    <span class="conf-label">Confirmation #</span>
+                    <span class="conf-value conf-id">${booking.id.slice(0, 12).toUpperCase()}</span>
+                </div>
+                <div class="confirmation-row">
+                    <span class="conf-label">Service</span>
+                    <span class="conf-value">${booking.service.name}</span>
+                </div>
+                <div class="confirmation-row">
+                    <span class="conf-label">Date</span>
+                    <span class="conf-value">${new Date(booking.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                </div>
+                <div class="confirmation-row">
+                    <span class="conf-label">Time</span>
+                    <span class="conf-value">${formatTime(booking.time)}</span>
+                </div>
+                <div class="confirmation-row confirmation-total">
+                    <span class="conf-label">Total</span>
+                    <span class="conf-value">$${booking.total}</span>
+                </div>
             </div>
             <div class="confirmation-actions">
                 <button class="btn btn-primary" onclick="window.location.href='index.html'">Return Home</button>
-                <button class="btn btn-secondary" onclick="window.print()">Print Confirmation</button>
+                <button class="btn btn-secondary" onclick="window.location.href='client-portal.html'">
+                    <i class="fas fa-calendar-alt"></i> My Appointments
+                </button>
             </div>
+            <button class="conf-print-link" onclick="window.print()">
+                <i class="fas fa-print"></i> Print this confirmation
+            </button>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
-    
-    // Add styles for modal
+
     const style = document.createElement('style');
     style.textContent = `
         .booking-confirmation-modal {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            inset: 0;
+            background: rgba(26, 14, 8, 0.72);
+            backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 10000;
+            padding: 1rem;
+            animation: confFadeIn 0.3s ease-out;
         }
-        
+        @keyframes confFadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
         .confirmation-content {
-            background: white;
-            padding: 3rem;
-            border-radius: 12px;
+            background: #FDFAF6;
+            padding: 2.5rem 2rem;
+            border-radius: 20px;
             text-align: center;
-            max-width: 500px;
-            margin: 0 20px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 32px 64px rgba(26, 14, 8, 0.28);
+            animation: confSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
-        .confirmation-header i {
-            font-size: 4rem;
-            color: #4CAF50;
-            margin-bottom: 1rem;
+        @keyframes confSlideUp {
+            from { transform: translateY(24px); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
         }
-        
-        .confirmation-header h2 {
-            color: var(--text-dark);
+        .confirmation-icon {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, #4CAF50, #43A047);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 8px 24px rgba(76, 175, 80, 0.35);
+        }
+        .confirmation-icon i {
+            font-size: 2rem;
+            color: white;
+        }
+        .confirmation-content h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: #1A0E08;
+            margin-bottom: 0.4rem;
+            letter-spacing: -0.02em;
+        }
+        .confirmation-subtitle {
+            color: #7A5F50;
+            font-size: 0.95rem;
             margin-bottom: 2rem;
         }
-        
         .confirmation-details {
-            text-align: left;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
             margin-bottom: 2rem;
+            border: 1px solid #F0E6D8;
         }
-        
-        .confirmation-details p {
-            margin-bottom: 0.5rem;
-            color: var(--text-light);
+        .confirmation-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.85rem 1.25rem;
+            border-bottom: 1px solid #F0E6D8;
+            text-align: left;
         }
-        
+        .confirmation-row:last-child { border-bottom: none; }
+        .conf-label {
+            color: #7A5F50;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .conf-value {
+            color: #1A0E08;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: right;
+            max-width: 60%;
+        }
+        .conf-id {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #6B4226;
+            letter-spacing: 0.05em;
+        }
+        .confirmation-total {
+            background: #FAF3E8;
+        }
+        .confirmation-total .conf-label,
+        .confirmation-total .conf-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #6B4226;
+        }
         .confirmation-actions {
             display: flex;
-            gap: 1rem;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.25rem;
+        }
+        .confirmation-actions .btn {
+            flex: 1;
+            min-width: 140px;
             justify-content: center;
         }
+        .conf-print-link {
+            background: none;
+            border: none;
+            color: #7A5F50;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            transition: color 0.2s;
+        }
+        .conf-print-link:hover { color: #6B4226; }
     `;
     document.head.appendChild(style);
 }

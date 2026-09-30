@@ -7,25 +7,36 @@ class ClientPortal {
     }
 
     init() {
-        this.checkAuthentication();
-        this.loadUserData();
-        this.bindEvents();
-        this.loadDashboardData();
+        window.firebaseService.onAuthStateChanged(async (user, profile) => {
+            if (!user || profile?.role !== 'client') {
+                await window.firebaseService.signOut().catch(() => {});
+                window.location.href = 'login.html';
+                return;
+            }
+            this.currentUser = { uid: user.uid, email: user.email, ...profile };
+            this.loadUserData();
+            this.bindEvents();
+            await this.loadDashboardData();
+        });
     }
 
     checkAuthentication() {
-        const session = UserSession.getCurrentUser();
-        if (!session || session.role !== 'client') {
-            window.location.href = 'login.html';
-            return;
-        }
-        this.currentUser = session;
+        // Auth is now handled by onAuthStateChanged in init()
     }
 
     loadUserData() {
-        // Load user information
-        document.getElementById('userName').textContent = 'John Doe';
+        const name = `${this.currentUser.firstName || ''} ${this.currentUser.lastName || ''}`.trim()
+            || this.currentUser.email;
+        document.getElementById('userName').textContent = name;
         document.getElementById('userEmail').textContent = this.currentUser.email;
+
+        // Pre-fill profile form with real data
+        const fields = { firstName: 'firstName', lastName: 'lastName',
+                         profileEmail: 'email', phone: 'phone', preferences: 'preferences' };
+        Object.entries(fields).forEach(([id, key]) => {
+            const el = document.getElementById(id);
+            if (el) el.value = this.currentUser[key] || '';
+        });
     }
 
     bindEvents() {
@@ -98,43 +109,59 @@ class ClientPortal {
         }
     }
 
-    loadDashboardData() {
-        // Load bookings from localStorage
-        const allBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-        
-        // Filter bookings for current user (in real app, this would be server-side)
-        this.bookings = allBookings.filter(booking => 
-            booking.email === this.currentUser.email
-        );
+    async loadDashboardData() {
+        try {
+            this.bookings = window.firebaseService
+                ? await window.firebaseService.getBookings(this.currentUser.uid)
+                : [];
+        } catch (err) {
+            console.error('Failed to load bookings:', err);
+            this.bookings = [];
+        }
 
-        // Update dashboard stats
         document.getElementById('totalAppointments').textContent = this.bookings.length;
-        
-        const upcomingBookings = this.bookings.filter(booking => {
-            const bookingDate = new Date(booking.date);
-            return bookingDate > new Date() && booking.status !== 'cancelled';
-        });
-        document.getElementById('upcomingAppointments').textContent = upcomingBookings.length;
 
-        // Load recent activity
+        const now = new Date();
+        const upcoming = this.bookings
+            .filter(b => new Date(b.date) > now && b.status !== 'cancelled')
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+        document.getElementById('upcomingAppointments').textContent = upcoming.length;
+
+        // Next scheduled appointment
+        const nextEl = document.getElementById('nextAppointment');
+        if (nextEl) {
+            nextEl.textContent = upcoming.length > 0
+                ? new Date(upcoming[0].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                : '\u2014';
+        }
+
+        // Most-booked service derived from real data
+        const counts = {};
+        this.bookings.forEach(b => {
+            const name = b.service?.name || (typeof b.service === 'string' ? b.service : null);
+            if (name) counts[name] = (counts[name] || 0) + 1;
+        });
+        const fav = Object.keys(counts).length > 0
+            ? Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]
+            : '\u2014';
+        document.getElementById('favoriteService').textContent = fav;
+
         this.loadRecentActivity();
     }
 
     loadRecentActivity() {
         const activityContainer = document.getElementById('recentActivity');
-        const recentBookings = this.bookings
-            .sort((a, b) => new Date(b.date) - new Date(a.date))
+        const recentBookings = [...this.bookings]
+            .sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
             .slice(0, 5);
 
         if (recentBookings.length === 0) {
             activityContainer.innerHTML = `
                 <div class="activity-item">
-                    <div class="activity-icon">
-                        <i class="fas fa-info-circle"></i>
-                    </div>
+                    <div class="activity-icon"><i class="fas fa-calendar-plus"></i></div>
                     <div class="activity-content">
-                        <p>No recent activity</p>
-                        <span>Start by booking your first appointment!</span>
+                        <p>No bookings yet</p>
+                        <span>Book your first appointment to get started!</span>
                     </div>
                 </div>
             `;
@@ -143,16 +170,12 @@ class ClientPortal {
 
         activityContainer.innerHTML = recentBookings.map(booking => `
             <div class="activity-item">
-                <div class="activity-icon">
-                    <i class="fas fa-calendar-check"></i>
-                </div>
+                <div class="activity-icon"><i class="fas fa-calendar-check"></i></div>
                 <div class="activity-content">
-                    <p>Booked ${booking.service}</p>
-                    <span>${this.formatDate(booking.date)} at ${booking.time}</span>
+                    <p>${booking.service?.name || booking.service || 'Appointment'}</p>
+                    <span>${this.formatDate(booking.date)}${booking.time ? ' at ' + booking.time : ''}</span>
                 </div>
-                <div class="activity-status status-${booking.status}">
-                    ${booking.status}
-                </div>
+                <div class="activity-status status-${booking.status}">${booking.status}</div>
             </div>
         `).join('');
     }
@@ -177,78 +200,80 @@ class ClientPortal {
 
     renderAppointments(filter) {
         const appointmentsList = document.getElementById('appointmentsList');
-        let filteredBookings = this.bookings;
+        const now = new Date();
+        let filteredBookings = [...this.bookings];
 
-        // Apply filter
         if (filter !== 'all') {
-            filteredBookings = this.bookings.filter(booking => {
-                if (filter === 'upcoming') {
-                    return new Date(booking.date) > new Date() && booking.status !== 'cancelled';
-                } else if (filter === 'completed') {
-                    return booking.status === 'completed';
-                } else if (filter === 'cancelled') {
-                    return booking.status === 'cancelled';
-                }
+            filteredBookings = filteredBookings.filter(booking => {
+                const isPast = new Date(booking.date) < now;
+                if (filter === 'upcoming')  return !isPast && booking.status !== 'cancelled';
+                if (filter === 'completed') return isPast  && booking.status !== 'cancelled';
+                if (filter === 'cancelled') return booking.status === 'cancelled';
                 return true;
             });
         }
 
-        appointmentsList.innerHTML = filteredBookings.map(booking => `
-            <div class="appointment-card">
-                <div class="appointment-info">
-                    <h4>${booking.service}</h4>
-                    <p class="appointment-date">
-                        <i class="fas fa-calendar"></i>
-                        ${this.formatDate(booking.date)} at ${booking.time}
-                    </p>
-                    <p class="appointment-duration">
-                        <i class="fas fa-clock"></i>
-                        ${booking.duration || '60'} minutes
-                    </p>
-                    <p class="appointment-price">
-                        <i class="fas fa-dollar-sign"></i>
-                        $${booking.price || '90'}
-                    </p>
+        if (filteredBookings.length === 0) {
+            appointmentsList.innerHTML = `
+                <div class="no-appointments">
+                    <i class="fas fa-calendar-times"></i>
+                    <h3>No appointments found</h3>
+                    <p>Try a different filter or <a href="booking.html">book a new appointment</a>.</p>
                 </div>
-                <div class="appointment-status">
-                    <span class="status-badge status-${booking.status}">
-                        ${booking.status}
-                    </span>
+            `;
+            return;
+        }
+
+        appointmentsList.innerHTML = filteredBookings.map(booking => {
+            const isPast = new Date(booking.date) < now;
+
+            // Single computed status — avoids contradictory double-badge
+            const displayStatus = booking.status === 'cancelled' ? 'cancelled'
+                : isPast ? 'completed'
+                : booking.status || 'confirmed';
+
+            const serviceName = booking.service?.name
+                || (typeof booking.service === 'string' ? booking.service : null)
+                || 'Appointment';
+            const duration = booking.service?.duration || booking.duration || 60;
+            const total    = booking.total != null ? booking.total : (booking.service?.price ?? 0);
+            const actions  = !isPast && booking.status !== 'cancelled'
+                ? this.getAppointmentActions(booking)
+                : '';
+
+            return `
+                <div class="appointment-card">
+                    <div class="appointment-info">
+                        <h4>${serviceName}</h4>
+                        <p><i class="fas fa-calendar-alt"></i> ${this.formatDate(booking.date)} at ${this.formatTime(booking.time)}</p>
+                        <p><i class="fas fa-hourglass-half"></i> ${duration} minutes</p>
+                        <p><i class="fas fa-tag"></i> $${total}</p>
+                    </div>
+                    <div class="appointment-status">
+                        <span class="status-badge status-${displayStatus}">${displayStatus}</span>
+                    </div>
+                    ${actions ? `<div class="appointment-actions">${actions}</div>` : ''}
                 </div>
-                <div class="appointment-actions">
-                    ${this.getAppointmentActions(booking)}
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     getAppointmentActions(booking) {
-        const bookingDate = new Date(booking.date);
-        const now = new Date();
-        const timeDiff = bookingDate - now;
-        const hoursDiff = timeDiff / (1000 * 60 * 60);
-
-        if (booking.status === 'cancelled') {
-            return '<span class="action-disabled">Cancelled</span>';
-        }
-
-        if (bookingDate < now) {
-            return '<span class="action-disabled">Completed</span>';
-        }
-
-        // Can reschedule if more than 24 hours away
+        const hoursDiff = (new Date(booking.date) - new Date()) / (1000 * 60 * 60);
         if (hoursDiff > 24) {
             return `
-                <button class="btn-small btn-secondary" onclick="clientPortal.rescheduleAppointment('${booking.id}')">
-                    Reschedule
-                </button>
-                <button class="btn-small btn-danger" onclick="clientPortal.cancelAppointment('${booking.id}')">
-                    Cancel
-                </button>
+                <button class="btn-small btn-secondary" onclick="clientPortal.rescheduleAppointment('${booking.id}')">Reschedule</button>
+                <button class="btn-small btn-danger"     onclick="clientPortal.cancelAppointment('${booking.id}')">Cancel</button>
             `;
-        } else {
-            return '<span class="action-disabled">Too close to modify</span>';
         }
+        return '<span class="action-disabled">Within 24-hour window</span>';
+    }
+
+    formatTime(time24) {
+        if (!time24) return '';
+        const [h, m] = time24.split(':').map(Number);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`;
     }
 
     filterAppointments(filter) {
@@ -264,33 +289,39 @@ class ClientPortal {
         }
     }
 
-    cancelAppointment(bookingId) {
-        if (confirm('Are you sure you want to cancel this appointment?')) {
-            // Update booking status
-            const allBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-            const bookingIndex = allBookings.findIndex(b => b.id === bookingId);
-            
-            if (bookingIndex !== -1) {
-                allBookings[bookingIndex].status = 'cancelled';
-                localStorage.setItem('bookings', JSON.stringify(allBookings));
-                
-                // Refresh data
-                this.loadDashboardData();
-                this.loadAppointments();
-                
-                this.showMessage('Appointment cancelled successfully', 'success');
+    async cancelAppointment(bookingId) {
+        if (!confirm('Are you sure you want to cancel this appointment?')) return;
+
+        try {
+            if (window.firebaseService) {
+                await window.firebaseService.updateBookingStatus(bookingId, 'cancelled');
             }
+            await this.loadDashboardData();
+            this.loadAppointments();
+            this.showMessage('Appointment cancelled successfully', 'success');
+        } catch (err) {
+            console.error('Failed to cancel appointment:', err);
+            this.showMessage('Could not cancel appointment. Please try again.', 'error');
         }
     }
 
-    updateProfile() {
-        const formData = new FormData(document.getElementById('profileForm'));
-        const profileData = Object.fromEntries(formData);
-        
-        // In a real app, this would send data to server
-        console.log('Profile updated:', profileData);
-        
-        this.showMessage('Profile updated successfully!', 'success');
+    async updateProfile() {
+        const profileData = {
+            firstName:   document.getElementById('firstName')?.value.trim(),
+            lastName:    document.getElementById('lastName')?.value.trim(),
+            phone:       document.getElementById('phone')?.value.trim(),
+            preferences: document.getElementById('preferences')?.value.trim(),
+        };
+
+        try {
+            await window.firebaseService.updateUserProfile(this.currentUser.uid, profileData);
+            Object.assign(this.currentUser, profileData);
+            this.loadUserData();
+            this.showMessage('Profile updated successfully!', 'success');
+        } catch (err) {
+            console.error('Failed to update profile:', err);
+            this.showMessage('Failed to save changes. Please try again.', 'error');
+        }
     }
 
     formatDate(dateString) {

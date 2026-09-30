@@ -11,31 +11,30 @@ class LoginSystem {
     }
 
     bindEvents() {
-        // Role selection
-        const roleCards = document.querySelectorAll('.role-card');
-        roleCards.forEach(card => {
-            card.addEventListener('click', () => {
-                const role = card.dataset.role;
-                this.selectRole(role);
-            });
+        document.querySelectorAll('.role-card').forEach(card => {
+            card.addEventListener('click', () => this.selectRole(card.dataset.role));
         });
 
-        // Back button
-        const backBtn = document.getElementById('backBtn');
-        if (backBtn) {
-            backBtn.addEventListener('click', () => {
-                this.showRoleSelection();
-            });
-        }
+        document.getElementById('backBtn')
+            ?.addEventListener('click', () => this.showRoleSelection());
 
-        // Form submission
-        const authForm = document.getElementById('authForm');
-        if (authForm) {
-            authForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.handleLogin();
-            });
-        }
+        document.getElementById('registerBackBtn')
+            ?.addEventListener('click', () => this.showLoginForm(this.currentRole));
+
+        document.getElementById('backToLoginLink')
+            ?.addEventListener('click', (e) => { e.preventDefault(); this.showLoginForm(this.currentRole); });
+
+        document.getElementById('createAccountLink')
+            ?.addEventListener('click', (e) => { e.preventDefault(); this.showRegisterForm(); });
+
+        document.getElementById('forgotPasswordLink')
+            ?.addEventListener('click', (e) => { e.preventDefault(); this.handleForgotPassword(); });
+
+        document.getElementById('authForm')
+            ?.addEventListener('submit', (e) => { e.preventDefault(); this.handleLogin(); });
+
+        document.getElementById('registrationForm')
+            ?.addEventListener('submit', (e) => { e.preventDefault(); this.handleRegistration(); });
     }
 
     selectRole(role) {
@@ -52,78 +51,116 @@ class LoginSystem {
     showLoginForm(role) {
         document.getElementById('roleSelection').style.display = 'none';
         document.getElementById('loginForm').style.display = 'block';
+        document.getElementById('registerForm').style.display = 'none';
 
-        // Update form title and fields
-        const formTitle = document.getElementById('formTitle');
-        const clientFields = document.getElementById('clientFields');
-        const adminFields = document.getElementById('adminFields');
-
-        if (role === 'client') {
-            formTitle.textContent = 'Client Login';
-            clientFields.style.display = 'block';
-            adminFields.style.display = 'none';
-        } else {
-            formTitle.textContent = 'Admin Login';
-            clientFields.style.display = 'none';
-            adminFields.style.display = 'block';
-        }
+        const isClient = role === 'client';
+        document.getElementById('formTitle').textContent = isClient ? 'Client Login' : 'Admin Login';
+        document.getElementById('clientFields').style.display = isClient ? 'block' : 'none';
+        document.getElementById('adminFields').style.display  = isClient ? 'none'  : 'block';
+        const createSection = document.getElementById('createAccountSection');
+        if (createSection) createSection.style.display = isClient ? 'block' : 'none';
     }
 
-    handleLogin() {
-        const email = document.getElementById('email').value;
+    showRegisterForm() {
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('registerForm').style.display = 'block';
+    }
+
+    async handleLogin() {
+        const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
+        const submitBtn = document.querySelector('#authForm button[type="submit"]');
+        const hideLoading = showLoading(submitBtn);
 
-        // Demo authentication
-        if (this.currentRole === 'client') {
-            if (email === 'client@demo.com' && password === 'client123') {
-                this.loginSuccess('client');
-            } else {
-                this.loginError('Invalid client credentials');
+        try {
+            const { profile } = await window.firebaseService.signIn(email, password);
+            const role = profile?.role || 'client';
+
+            if (role !== this.currentRole) {
+                await window.firebaseService.signOut();
+                hideLoading();
+                this.showMessage(
+                    this.currentRole === 'admin'
+                        ? 'This account does not have admin access.'
+                        : 'Please use the Admin login for this account.',
+                    'error'
+                );
+                return;
             }
-        } else if (this.currentRole === 'admin') {
-            if (email === 'admin@massage2wellness.com' && password === 'admin123') {
-                this.loginSuccess('admin');
-            } else {
-                this.loginError('Invalid admin credentials');
-            }
+
+            hideLoading();
+            this.showMessage('Login successful! Redirecting...', 'success');
+            setTimeout(() => {
+                window.location.href = role === 'admin' ? 'admin.html' : 'client-portal.html';
+            }, 1200);
+        } catch (error) {
+            hideLoading();
+            this.showMessage(this.getAuthErrorMessage(error.code), 'error');
         }
     }
 
-    loginSuccess(role) {
-        // Store session
-        const session = {
-            role: role,
-            email: document.getElementById('email').value,
-            loginTime: new Date().toISOString()
-        };
+    async handleRegistration() {
+        const firstName = document.getElementById('reg-firstName').value.trim();
+        const lastName  = document.getElementById('reg-lastName').value.trim();
+        const email     = document.getElementById('reg-email').value.trim();
+        const password  = document.getElementById('reg-password').value;
+        const confirm   = document.getElementById('reg-confirmPassword').value;
+        const phone     = document.getElementById('reg-phone').value.trim();
 
-        localStorage.setItem('userSession', JSON.stringify(session));
+        if (password !== confirm) {
+            this.showMessage('Passwords do not match.', 'error');
+            return;
+        }
+        if (password.length < 6) {
+            this.showMessage('Password must be at least 6 characters.', 'error');
+            return;
+        }
 
-        // Show success message
-        this.showMessage('Login successful! Redirecting...', 'success');
+        const submitBtn = document.querySelector('#registrationForm button[type="submit"]');
+        const hideLoading = showLoading(submitBtn);
 
-        // Redirect based on role
-        setTimeout(() => {
-            if (role === 'client') {
-                window.location.href = 'client-portal.html';
-            } else {
-                window.location.href = 'admin.html';
-            }
-        }, 1500);
+        try {
+            await window.firebaseService.registerUser(email, password, { firstName, lastName, phone });
+            hideLoading();
+            this.showMessage('Account created! Redirecting to your portal…', 'success');
+            setTimeout(() => { window.location.href = 'client-portal.html'; }, 1500);
+        } catch (error) {
+            hideLoading();
+            this.showMessage(this.getAuthErrorMessage(error.code), 'error');
+        }
     }
 
-    loginError(message) {
-        this.showMessage(message, 'error');
+    async handleForgotPassword() {
+        const email = document.getElementById('email').value.trim();
+        if (!email) {
+            this.showMessage('Enter your email address first, then click Forgot Password.', 'error');
+            return;
+        }
+        try {
+            await window.firebaseAuth.sendPasswordResetEmail(email);
+            this.showMessage('Password reset email sent — check your inbox.', 'success');
+        } catch (error) {
+            this.showMessage(this.getAuthErrorMessage(error.code), 'error');
+        }
+    }
+
+    getAuthErrorMessage(code) {
+        const map = {
+            'auth/user-not-found':        'No account found with this email address.',
+            'auth/wrong-password':        'Incorrect password. Please try again.',
+            'auth/invalid-credential':    'Invalid email or password.',
+            'auth/invalid-email':         'Please enter a valid email address.',
+            'auth/email-already-in-use':  'An account with this email already exists.',
+            'auth/weak-password':         'Password must be at least 6 characters.',
+            'auth/too-many-requests':     'Too many failed attempts. Please try again later.',
+            'auth/network-request-failed':'Network error. Please check your connection.',
+        };
+        return map[code] || 'An error occurred. Please try again.';
     }
 
     showMessage(message, type) {
-        // Remove existing messages
-        const existingMessage = document.querySelector('.login-message');
-        if (existingMessage) {
-            existingMessage.remove();
-        }
+        document.querySelector('.login-message')?.remove();
 
-        // Create new message
         const messageDiv = document.createElement('div');
         messageDiv.className = `login-message ${type}`;
         messageDiv.innerHTML = `
@@ -131,54 +168,45 @@ class LoginSystem {
             <span>${message}</span>
         `;
 
-        // Insert before form
-        const form = document.getElementById('authForm');
-        form.parentNode.insertBefore(messageDiv, form);
+        const isRegisterVisible = document.getElementById('registerForm')?.style.display !== 'none';
+        const anchor = isRegisterVisible
+            ? document.getElementById('registrationForm')
+            : document.getElementById('authForm');
+        if (anchor) anchor.parentNode.insertBefore(messageDiv, anchor);
 
-        // Auto remove after 3 seconds
-        setTimeout(() => {
-            messageDiv.remove();
-        }, 3000);
+        setTimeout(() => messageDiv.remove(), 4000);
     }
 
     checkExistingSession() {
-        const session = localStorage.getItem('userSession');
-        if (session) {
-            const sessionData = JSON.parse(session);
-            // Could redirect to appropriate dashboard if session exists
-            console.log('Existing session found:', sessionData);
-        }
-    }
-
-    logout() {
-        localStorage.removeItem('userSession');
-        window.location.href = 'login.html';
+        window.firebaseAuth.onAuthStateChanged(async (user) => {
+            if (!user) return;
+            const profile = await window.firebaseService.getUserProfile(user.uid);
+            if (!profile) return;
+            window.location.href = profile.role === 'admin' ? 'admin.html' : 'client-portal.html';
+        });
     }
 }
 
-// User session management
+// UserSession — thin wrapper around Firebase Auth + cached profile
 class UserSession {
     static getCurrentUser() {
-        const session = localStorage.getItem('userSession');
-        return session ? JSON.parse(session) : null;
+        return window.firebaseAuth?.currentUser || null;
     }
 
     static isLoggedIn() {
-        return this.getCurrentUser() !== null;
+        return !!window.firebaseAuth?.currentUser;
     }
 
     static isAdmin() {
-        const user = this.getCurrentUser();
-        return user && user.role === 'admin';
+        return window._cachedUserProfile?.role === 'admin';
     }
 
     static isClient() {
-        const user = this.getCurrentUser();
-        return user && user.role === 'client';
+        return window._cachedUserProfile?.role === 'client';
     }
 
-    static logout() {
-        localStorage.removeItem('userSession');
+    static async logout() {
+        await window.firebaseService?.signOut();
         window.location.href = 'login.html';
     }
 }

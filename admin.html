@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Massage2Wellness</title>
+    <meta name="description" content="Massage2Wellness admin dashboard. Manage bookings, customers, messages, and business settings.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
     <link rel="stylesheet" href="styles/main.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;600&family=Open+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -153,9 +154,11 @@
             <div class="booking-filters">
                 <div class="filter-group">
                     <label>Date Range:</label>
-                    <input type="date" id="filterStartDate">
-                    <span>to</span>
-                    <input type="date" id="filterEndDate">
+                    <div class="date-range-inputs">
+                        <input type="date" id="filterStartDate">
+                        <span>to</span>
+                        <input type="date" id="filterEndDate">
+                    </div>
                 </div>
                 <div class="filter-group">
                     <label>Status:</label>
@@ -318,19 +321,21 @@
                 <!-- Booking Settings -->
                 <div class="settings-card">
                     <h3>Booking Settings</h3>
-                    <div class="setting-item">
-                        <label>Booking window (days ahead):</label>
-                        <input type="number" value="30" min="1" max="90">
-                    </div>
-                    <div class="setting-item">
-                        <label>Cancellation notice (hours):</label>
-                        <input type="number" value="24" min="1" max="72">
-                    </div>
-                    <div class="setting-item">
-                        <label class="checkbox-label">
-                            <input type="checkbox" checked>
-                            Allow online payments
-                        </label>
+                    <div class="setting-items-list">
+                        <div class="setting-item">
+                            <label>Booking window <span class="label-sub">(days ahead)</span></label>
+                            <input type="number" value="30" min="1" max="90">
+                        </div>
+                        <div class="setting-item">
+                            <label>Cancellation notice <span class="label-sub">(hours)</span></label>
+                            <input type="number" value="24" min="1" max="72">
+                        </div>
+                        <div class="setting-item">
+                            <label class="checkbox-label">
+                                <input type="checkbox" checked>
+                                Allow online payments
+                            </label>
+                        </div>
                     </div>
                     <button class="btn btn-primary">Save Settings</button>
                 </div>
@@ -340,16 +345,16 @@
                     <h3>Service Pricing</h3>
                     <div class="pricing-settings">
                         <div class="price-item">
-                            <label>Swedish Massage (60 min):</label>
-                            <input type="number" value="80" min="0">
+                            <label>Swedish Massage <span class="label-sub">(60 min)</span></label>
+                            <span class="price-input-wrap"><input type="number" value="80" min="0"></span>
                         </div>
                         <div class="price-item">
-                            <label>Deep Tissue (60 min):</label>
-                            <input type="number" value="95" min="0">
+                            <label>Deep Tissue <span class="label-sub">(60 min)</span></label>
+                            <span class="price-input-wrap"><input type="number" value="95" min="0"></span>
                         </div>
                         <div class="price-item">
-                            <label>Hot Stone (75 min):</label>
-                            <input type="number" value="110" min="0">
+                            <label>Hot Stone <span class="label-sub">(75 min)</span></label>
+                            <span class="price-input-wrap"><input type="number" value="110" min="0"></span>
                         </div>
                     </div>
                     <button class="btn btn-primary">Update Prices</button>
@@ -359,15 +364,33 @@
                 <div class="settings-card">
                     <h3>Data Management</h3>
                     <div class="data-actions">
-                        <button class="btn btn-secondary" onclick="exportAllData()">
-                            <i class="fas fa-download"></i> Export All Data
-                        </button>
-                        <button class="btn btn-outline" onclick="clearOldData()">
-                            <i class="fas fa-trash"></i> Clear Old Data
-                        </button>
-                        <button class="btn btn-primary" onclick="generateBackup()">
-                            <i class="fas fa-shield-alt"></i> Create Backup
-                        </button>
+                        <div class="data-action-item">
+                            <div class="data-action-info">
+                                <strong>Export All Data</strong>
+                                <span>Download all bookings &amp; messages as JSON</span>
+                            </div>
+                            <button class="btn btn-secondary" onclick="exportAllData()">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                        </div>
+                        <div class="data-action-item">
+                            <div class="data-action-info">
+                                <strong>Create Backup</strong>
+                                <span>Save a timestamped copy of all current data</span>
+                            </div>
+                            <button class="btn btn-primary" onclick="generateBackup()">
+                                <i class="fas fa-shield-alt"></i> Backup
+                            </button>
+                        </div>
+                        <div class="data-action-item">
+                            <div class="data-action-info">
+                                <strong>Clear Old Data</strong>
+                                <span>Remove records older than one year</span>
+                            </div>
+                            <button class="btn btn-outline" onclick="clearOldData()">
+                                <i class="fas fa-trash"></i> Clear
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

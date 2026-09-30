@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Client Portal - Massage2Wellness</title>
+    <meta name="description" content="Your Massage2Wellness client portal. View upcoming appointments, manage your profile, and book new sessions.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
     <link rel="stylesheet" href="styles/main.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;600&family=Open+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -47,8 +48,8 @@
                     Profile
                 </button>
                 <button class="portal-nav-btn" data-tab="wellness">
-                    <i class="fas fa-heart"></i>
-                    Wellness Tips
+                    <i class="fas fa-leaf"></i>
+                    Session Care
                 </button>
             </div>
 
@@ -87,11 +88,11 @@
 
                     <div class="dashboard-card">
                         <div class="card-icon">
-                            <i class="fas fa-spa"></i>
+                            <i class="fas fa-calendar-day"></i>
                         </div>
                         <div class="card-content">
-                            <h3 id="wellnessScore">85%</h3>
-                            <p>Wellness Score</p>
+                            <h3 id="nextAppointment">&mdash;</h3>
+                            <p>Next Appointment</p>
                         </div>
                     </div>
                 </div>
@@ -108,10 +109,10 @@
                             <i class="fas fa-calendar"></i>
                             View Appointments
                         </button>
-                        <button class="btn btn-accent">
-                            <i class="fas fa-gift"></i>
-                            View Packages
-                        </button>
+                        <a href="services.html" class="btn btn-outline">
+                            <i class="fas fa-tags"></i>
+                            View Services
+                        </a>
                     </div>
                 </div>
 
@@ -154,18 +155,18 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="firstName">First Name</label>
-                                <input type="text" id="firstName" name="firstName" value="John">
+                                <input type="text" id="firstName" name="firstName" value="">
                             </div>
                             <div class="form-group">
                                 <label for="lastName">Last Name</label>
-                                <input type="text" id="lastName" name="lastName" value="Doe">
+                                <input type="text" id="lastName" name="lastName" value="">
                             </div>
                         </div>
 
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="profileEmail">Email</label>
-                                <input type="email" id="profileEmail" name="email" value="client@demo.com">
+                                <input type="email" id="profileEmail" name="email" value="">
                             </div>
                             <div class="form-group">
                                 <label for="phone">Phone</label>
@@ -175,7 +176,7 @@
 
                         <div class="form-group">
                             <label for="preferences">Massage Preferences</label>
-                            <textarea id="preferences" name="preferences" rows="3">Prefers medium pressure, no essential oils</textarea>
+                            <textarea id="preferences" name="preferences" rows="3" placeholder="e.g. medium pressure, focus on lower back"></textarea>
                         </div>
 
                         <button type="submit" class="btn btn-primary">Update Profile</button>
@@ -201,66 +202,53 @@
                 </div>
             </div>
 
-            <!-- Wellness Tab -->
+            <!-- Session Care Tab -->
             <div class="portal-content" id="wellness" style="display: none;">
                 <div class="wellness-section">
-                    <h3>Your Wellness Journey</h3>
-                    
+                    <h3>Post-Session Care Guide</h3>
+                    <p style="color: var(--text-light); margin-bottom: 2rem;">Follow these simple steps after each appointment to get the most out of your massage.</p>
+
                     <div class="wellness-tips">
                         <div class="tip-card">
-                            <div class="tip-icon">
-                                <i class="fas fa-water"></i>
-                            </div>
+                            <div class="tip-icon"><i class="fas fa-tint"></i></div>
                             <div class="tip-content">
-                                <h4>Stay Hydrated</h4>
-                                <p>Drink plenty of water after your massage to help flush out toxins and maintain the benefits.</p>
+                                <h4>Drink Water</h4>
+                                <p>Drink at least 2&ndash;3 glasses of water in the hours following your session to help your body flush metabolic waste released during massage.</p>
                             </div>
                         </div>
-
                         <div class="tip-card">
-                            <div class="tip-icon">
-                                <i class="fas fa-moon"></i>
-                            </div>
+                            <div class="tip-icon"><i class="fas fa-moon"></i></div>
                             <div class="tip-content">
-                                <h4>Rest & Recovery</h4>
-                                <p>Allow your body time to rest after a massage. Light activity is fine, but avoid strenuous exercise.</p>
+                                <h4>Rest</h4>
+                                <p>Avoid intense workouts for at least 12 hours after a deep tissue session. Light walking is fine. Let your muscles integrate the work.</p>
                             </div>
                         </div>
-
                         <div class="tip-card">
-                            <div class="tip-icon">
-                                <i class="fas fa-leaf"></i>
-                            </div>
+                            <div class="tip-icon"><i class="fas fa-temperature-high"></i></div>
                             <div class="tip-content">
-                                <h4>Regular Sessions</h4>
-                                <p>For best results, maintain regular massage sessions based on your wellness goals and lifestyle.</p>
+                                <h4>Apply Heat if Sore</h4>
+                                <p>Some soreness 24&ndash;48 hours after deep tissue work is normal. A warm bath or heating pad can ease any temporary discomfort.</p>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="wellness-tracker">
-                        <h4>Wellness Tracker</h4>
-                        <div class="tracker-metrics">
-                            <div class="metric">
-                                <span class="metric-label">Stress Level</span>
-                                <div class="metric-bar">
-                                    <div class="metric-fill" style="width: 30%"></div>
-                                </div>
-                                <span class="metric-value">Low</span>
+                        <div class="tip-card">
+                            <div class="tip-icon"><i class="fas fa-ban"></i></div>
+                            <div class="tip-content">
+                                <h4>Avoid Alcohol</h4>
+                                <p>Skip alcohol for the rest of the day after your appointment. Massage increases circulation and alcohol can amplify its effects unexpectedly.</p>
                             </div>
-                            <div class="metric">
-                                <span class="metric-label">Energy Level</span>
-                                <div class="metric-bar">
-                                    <div class="metric-fill" style="width: 80%"></div>
-                                </div>
-                                <span class="metric-value">High</span>
+                        </div>
+                        <div class="tip-card">
+                            <div class="tip-icon"><i class="fas fa-redo"></i></div>
+                            <div class="tip-content">
+                                <h4>Book Regularly</h4>
+                                <p>For stress management, aim for once a month. For chronic pain or athletic recovery, every 2&ndash;3 weeks delivers noticeably better results.</p>
                             </div>
-                            <div class="metric">
-                                <span class="metric-label">Sleep Quality</span>
-                                <div class="metric-bar">
-                                    <div class="metric-fill" style="width: 75%"></div>
-                                </div>
-                                <span class="metric-value">Good</span>
+                        </div>
+                        <div class="tip-card">
+                            <div class="tip-icon"><i class="fas fa-comment-alt"></i></div>
+                            <div class="tip-content">
+                                <h4>Give Feedback</h4>
+                                <p>Let your therapist know what worked and what didn&rsquo;t. A brief note at your next session helps us tailor pressure and focus areas perfectly.</p>
                             </div>
                         </div>
                     </div>

@@ -1,28 +1,47 @@
 // Admin Dashboard Functionality
 document.addEventListener('DOMContentLoaded', function() {
     initializeAdmin();
-    setupTabNavigation();
-    loadDashboardData();
-    setupEventListeners();
 });
 
 function initializeAdmin() {
-    // Check if user is authenticated via login session
-    if (!window.UserSession || !window.UserSession.isAdmin()) {
-        window.location.href = 'login.html';
-        return;
-    }
-    
-    // Set up date filters with default values
-    const today = new Date();
-    const nextWeek = new Date();
-    nextWeek.setDate(today.getDate() + 7);
-    
-    const startDateInput = document.getElementById('filterStartDate');
-    const endDateInput = document.getElementById('filterEndDate');
-    
-    if (startDateInput) startDateInput.value = today.toISOString().split('T')[0];
-    if (endDateInput) endDateInput.value = nextWeek.toISOString().split('T')[0];
+    window.firebaseService.onAuthStateChanged(async (user, profile) => {
+        if (!user || profile?.role !== 'admin') {
+            await window.firebaseService.signOut().catch(() => {});
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // Populate admin name in nav bar
+        const profileName = document.querySelector('.profile-name');
+        if (profileName) {
+            profileName.textContent =
+                `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || profile.email;
+        }
+
+        // Wire logout button
+        document.querySelector('.logout-btn')
+            ?.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await window.firebaseService.signOut();
+                window.location.href = 'index.html';
+            });
+
+        // Default date filter range
+        const today    = new Date();
+        const nextWeek = new Date();
+        nextWeek.setDate(today.getDate() + 7);
+        const startDateInput = document.getElementById('filterStartDate');
+        const endDateInput   = document.getElementById('filterEndDate');
+        if (startDateInput) startDateInput.value = today.toISOString().split('T')[0];
+        if (endDateInput)   endDateInput.value   = nextWeek.toISOString().split('T')[0];
+
+        setupTabNavigation();
+        setupEventListeners();
+
+        // Navigate to the tab in the URL hash, defaulting to dashboard
+        const initialTab = window.location.hash.slice(1) || 'dashboard';
+        showTab(initialTab);
+    });
 }
 
 function setupTabNavigation() {
@@ -31,8 +50,15 @@ function setupTabNavigation() {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const tabName = this.dataset.tab;
+            history.pushState({ tab: tabName }, '', '#' + tabName);
             showTab(tabName);
         });
+    });
+
+    // Back/forward button support
+    window.addEventListener('popstate', (e) => {
+        const tabName = e.state?.tab || window.location.hash.slice(1) || 'dashboard';
+        showTab(tabName);
     });
 }
 
@@ -116,39 +142,54 @@ async function loadDashboardData() {
     loadRecentActivity(bookings, messages);
 }
 
+// Safely converts Firestore Timestamps, ISO strings, or Date objects to a JS Date
+function toJSDate(val) {
+    if (!val) return null;
+    if (typeof val.toDate === 'function') return val.toDate();
+    const d = new Date(val);
+    return isNaN(d) ? null : d;
+}
+
 function loadRecentActivity(bookings, messages) {
     const activityContainer = document.getElementById('recentActivity');
     const activities = [];
-    
-    // Add recent bookings
+
     bookings.slice(-5).forEach(booking => {
+        const time = toJSDate(booking.createdAt || booking.created_at);
+        if (!time) return;
         activities.push({
             type: 'booking',
-            message: `New booking: ${booking.customer?.firstName} ${booking.customer?.lastName} - ${booking.service?.name}`,
-            time: new Date(booking.createdAt || booking.created_at),
+            message: `New booking: ${booking.customer?.firstName} ${booking.customer?.lastName} \u2014 ${booking.service?.name}`,
+            time,
             icon: 'fas fa-calendar-plus'
         });
     });
-    
-    // Add recent messages
+
     messages.slice(-3).forEach(message => {
+        const time = toJSDate(message.timestamp);
+        if (!time) return;
         activities.push({
             type: 'message',
             message: `New message from ${message.firstName} ${message.lastName}`,
-            time: new Date(message.timestamp),
+            time,
             icon: 'fas fa-envelope'
         });
     });
-    
-    // Sort by time (most recent first)
+
     activities.sort((a, b) => b.time - a.time);
-    
-    // Display activities
+
+    if (activities.length === 0) {
+        activityContainer.innerHTML = `
+            <div class="activity-item">
+                <div class="activity-icon"><i class="fas fa-info-circle"></i></div>
+                <div class="activity-content"><p>No recent activity</p></div>
+            </div>`;
+        return;
+    }
+
     activityContainer.innerHTML = activities.slice(0, 8).map(activity => `
         <div class="activity-item">
-            <div class="activity-icon">
-                <i class="${activity.icon}"></i>
-            </div>
+            <div class="activity-icon"><i class="${activity.icon}"></i></div>
             <div class="activity-content">
                 <p>${activity.message}</p>
                 <span class="activity-time">${formatRelativeTime(activity.time)}</span>
@@ -305,16 +346,16 @@ function setupEventListeners() {
 
 // Utility Functions
 function formatDateTime(date, time) {
-    const dateObj = new Date(date);
-    const formattedDate = dateObj.toLocaleDateString();
-    
+    const dateObj = toJSDate(date) ?? new Date(date);
+    if (isNaN(dateObj)) return '—';
+    const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
     if (time) {
-        const [hours, minutes] = time.split(':');
-        const hour12 = hours % 12 || 12;
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        return `${formattedDate} ${hour12}:${minutes} ${ampm}`;
+        const [h, m] = time.split(':').map(Number);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        return `${formattedDate} ${h % 12 || 12}:${String(m).padStart(2,'0')} ${ampm}`;
     }
-    
+
     return formattedDate;
 }
 
@@ -554,6 +595,150 @@ function clearOldData() {
 function generateBackup() {
     exportAllData();
     showMessage('Backup created and downloaded', 'success');
+}
+
+async function markAllRead() {
+    try {
+        const messages = await window.firebaseService.getContactMessages();
+        const unread = messages.filter(m => m.status === 'new');
+        await Promise.all(unread.map(m =>
+            window.firebaseService.db.collection('contact_messages').doc(m.id).update({ status: 'read' })
+        ));
+        loadMessagesData();
+        showMessage(`${unread.length} message${unread.length !== 1 ? 's' : ''} marked as read`, 'success');
+    } catch (error) {
+        console.error('Error marking all read:', error);
+        showMessage('Failed to update messages', 'error');
+    }
+}
+
+async function filterMessages() {
+    const statusFilter = document.getElementById('messageStatus').value;
+    const subjectFilter = document.getElementById('messageSubject').value;
+
+    let messages = [];
+    try {
+        messages = await window.firebaseService.getContactMessages();
+    } catch (error) {
+        console.error('Error loading messages:', error);
+        showMessage('Failed to load messages', 'error');
+        return;
+    }
+
+    if (statusFilter) messages = messages.filter(m => m.status === statusFilter);
+    if (subjectFilter) messages = messages.filter(m => m.subject === subjectFilter);
+
+    const container = document.getElementById('messagesContainer');
+    if (messages.length === 0) {
+        container.innerHTML = '<p class="no-data">No messages match the selected filters.</p>';
+        return;
+    }
+
+    container.innerHTML = messages.map(message => `
+        <div class="message-card ${message.status === 'new' ? 'unread' : ''}" data-message-id="${message.id}">
+            <div class="message-header">
+                <div class="message-sender">
+                    <h4>${message.firstName} ${message.lastName}</h4>
+                    <span class="message-email">${message.email}</span>
+                </div>
+                <div class="message-meta">
+                    <span class="message-date">${formatDateTime(message.timestamp)}</span>
+                    <span class="status-badge status-${message.status}">${message.status}</span>
+                </div>
+            </div>
+            <div class="message-subject">
+                <strong>Subject:</strong> ${message.subject}
+                ${message.preferredService ? `| Service: ${message.preferredService}` : ''}
+            </div>
+            <div class="message-content"><p>${message.message}</p></div>
+            <div class="message-actions">
+                <button class="btn btn-secondary" onclick="markAsRead('${message.id}')">
+                    <i class="fas fa-check"></i> Mark Read
+                </button>
+                <button class="btn btn-primary" onclick="replyToMessage('${message.id}')">
+                    <i class="fas fa-reply"></i> Reply
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showAddBookingModal() {
+    const modal = document.getElementById('bookingModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('bookingModalBody');
+    const actionBtn = document.getElementById('modalActionBtn');
+
+    modalTitle.textContent = 'Add New Booking';
+    modalBody.innerHTML = `
+        <div class="booking-details">
+            <p style="color:var(--text-light);margin-bottom:1.5rem;">
+                To create a new booking, use the online booking form so all validation and
+                availability checks run correctly.
+            </p>
+            <a href="booking.html" target="_blank" class="btn btn-primary">
+                <i class="fas fa-external-link-alt"></i> Open Booking Form
+            </a>
+        </div>`;
+    actionBtn.style.display = 'none';
+    modal.style.display = 'block';
+}
+
+function showAddCustomerModal() {
+    const modal = document.getElementById('bookingModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('bookingModalBody');
+    const actionBtn = document.getElementById('modalActionBtn');
+
+    modalTitle.textContent = 'Add New Customer';
+    modalBody.innerHTML = `
+        <form id="newCustomerForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>First Name *</label>
+                    <input type="text" id="nc-firstName" required>
+                </div>
+                <div class="form-group">
+                    <label>Last Name *</label>
+                    <input type="text" id="nc-lastName" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="nc-email" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="nc-phone">
+                </div>
+            </div>
+        </form>`;
+    actionBtn.style.display = '';
+    actionBtn.textContent = 'Save Customer';
+    actionBtn.onclick = async () => {
+        const firstName = document.getElementById('nc-firstName').value.trim();
+        const lastName = document.getElementById('nc-lastName').value.trim();
+        const email = document.getElementById('nc-email').value.trim();
+        const phone = document.getElementById('nc-phone').value.trim();
+        if (!firstName || !lastName || !email) {
+            showMessage('Please fill in all required fields', 'error');
+            return;
+        }
+        try {
+            await window.firebaseService.db.collection('users').add({
+                firstName, lastName, email, phone, role: 'client',
+                createdAt: new Date()
+            });
+            closeModal('bookingModal');
+            loadCustomersData();
+            showMessage('Customer added successfully', 'success');
+        } catch (err) {
+            console.error('Error adding customer:', err);
+            showMessage('Failed to add customer', 'error');
+        }
+    };
+    modal.style.display = 'block';
 }
 
 // Modal functionality

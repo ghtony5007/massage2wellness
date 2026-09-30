@@ -9,10 +9,10 @@ class ComponentLoader {
             this.loadNavigation(),
             this.loadFooter()
         ]);
-        
-        // Initialize navigation functionality after loading
+
         this.initNavigation();
         this.setActiveNavigation();
+        this.updateNavForAuthState();
     }
 
     async loadNavigation() {
@@ -94,14 +94,55 @@ class ComponentLoader {
         }
     }
 
+    updateNavForAuthState() {
+        if (!window.firebaseAuth) return;
+
+        window.firebaseAuth.onAuthStateChanged(async (user) => {
+            const loginLink = document.querySelector('.login-btn');
+            if (!loginLink) return;
+
+            // Remove any existing logout link to avoid duplicates on re-render
+            document.querySelector('.nav-logout-btn')?.remove();
+
+            if (!user) {
+                loginLink.href = 'login.html';
+                loginLink.innerHTML = '<i class="fas fa-user"></i> Login';
+                return;
+            }
+
+            const profile = window._cachedUserProfile
+                || await window.firebaseService?.getUserProfile(user.uid);
+
+            if (profile?.role === 'admin') {
+                loginLink.href = 'admin.html';
+                loginLink.innerHTML = '<i class="fas fa-user-shield"></i> Admin';
+            } else {
+                loginLink.href = 'client-portal.html';
+                loginLink.innerHTML = '<i class="fas fa-user-circle"></i> My Portal';
+            }
+
+            // Insert Logout link after the portal/admin link
+            const logoutLink = document.createElement('a');
+            logoutLink.href = '#';
+            logoutLink.className = 'nav-link nav-logout-btn';
+            logoutLink.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
+            logoutLink.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await window.firebaseService?.signOut();
+                window.location.href = 'index.html';
+            });
+            loginLink.insertAdjacentElement('afterend', logoutLink);
+        });
+    }
+
     getCurrentPage() {
         const path = window.location.pathname;
         const filename = path.split('/').pop();
-        
+
         if (!filename || filename === 'index.html') {
             return 'home';
         }
-        
+
         // Remove .html extension to get page name
         return filename.replace('.html', '');
     }

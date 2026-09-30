@@ -1,230 +1,101 @@
-// Main JavaScript for Massage2Wellness website
+// Shared utilities and page-level animations for Massage2Wellness
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Smooth scrolling for anchor links
-    const anchorLinks = document.querySelectorAll('a[href^="#"]');
-    anchorLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
+document.addEventListener('DOMContentLoaded', () => {
+    initSmoothScroll();
+    initNavbarScroll();
+    initScrollAnimations();
+    initToastStyles();
+});
+
+function initSmoothScroll() {
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+        link.addEventListener('click', e => {
+            const target = document.querySelector(link.getAttribute('href'));
+            if (!target) return;
             e.preventDefault();
-            const targetId = this.getAttribute('href');
-            const targetElement = document.querySelector(targetId);
-            
-            if (targetElement) {
-                const offsetTop = targetElement.offsetTop - 80; // Account for fixed navbar
-                window.scrollTo({
-                    top: offsetTop,
-                    behavior: 'smooth'
-                });
-            }
+            window.scrollTo({ top: target.offsetTop - 80, behavior: 'smooth' });
         });
     });
+}
 
-    // Navbar background on scroll (throttled via requestAnimationFrame)
+function initNavbarScroll() {
     const navbar = document.querySelector('.navbar');
-    if (navbar) {
-        let ticking = false;
-        window.addEventListener('scroll', function() {
-            if (!ticking) {
-                requestAnimationFrame(function() {
-                    if (window.scrollY > 50) {
-                        navbar.style.backgroundColor = 'rgba(250, 249, 247, 0.98)';
-                        navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
-                    } else {
-                        navbar.style.backgroundColor = 'rgba(250, 249, 247, 0.95)';
-                        navbar.style.boxShadow = 'none';
-                    }
-                    ticking = false;
-                });
-                ticking = true;
-            }
+    if (!navbar) return;
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+            const scrolled = window.scrollY > 50;
+            navbar.style.backgroundColor = scrolled
+                ? 'rgba(253, 250, 246, 0.98)'
+                : 'rgba(253, 250, 246, 0.9)';
+            navbar.style.boxShadow = scrolled
+                ? '0 2px 20px rgba(107, 66, 38, 0.1)'
+                : 'none';
+            ticking = false;
         });
-    }
+    });
+}
 
-    // Intersection Observer for animations
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver(function(entries) {
+function initScrollAnimations() {
+    const elements = document.querySelectorAll('.service-card, .about-text, .hero-text');
+    if (!elements.length) return;
+    const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.style.opacity = '1';
                 entry.target.style.transform = 'translateY(0)';
             }
         });
-    }, observerOptions);
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+    elements.forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(30px)';
+        el.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
+        observer.observe(el);
+    });
+}
 
-    // Observe elements for animation
-    const animatedElements = document.querySelectorAll('.service-card, .about-text, .hero-text');
-    if (animatedElements.length > 0) {
-        animatedElements.forEach(el => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(30px)';
-            el.style.transition = 'all 0.8s ease-out';
-            observer.observe(el);
-        });
-    }
-
-    // Form validation helper functions
-    window.validateForm = function(formData) {
-        const errors = [];
-        
-        if (!formData.name || formData.name.trim().length < 2) {
-            errors.push('Name must be at least 2 characters long');
-        }
-        
-        if (!formData.email || !isValidEmail(formData.email)) {
-            errors.push('Please enter a valid email address');
-        }
-        
-        if (!formData.phone || !isValidPhone(formData.phone)) {
-            errors.push('Please enter a valid phone number');
-        }
-        
-        return errors;
-    };
-
-    function isValidEmail(email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    }
-
-    function isValidPhone(phone) {
-        const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-        const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
-        return phoneRegex.test(cleanPhone) && cleanPhone.length >= 10;
-    }
-
-    // Loading state helper
-    window.showLoading = function(button) {
-        const originalText = button.textContent;
-        button.textContent = 'Loading...';
-        button.disabled = true;
-        
-        return function() {
-            button.textContent = originalText;
-            button.disabled = false;
-        };
-    };
-
-    // Success/Error message helper
-    window.showMessage = function(message, type = 'success') {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message message-${type}`;
-        messageDiv.textContent = message;
-        
-        messageDiv.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            color: white;
-            font-weight: 500;
-            z-index: 9999;
-            animation: slideIn 0.3s ease-out;
-            background-color: ${type === 'success' ? '#4CAF50' : '#f44336'};
-        `;
-
-        document.body.appendChild(messageDiv);
-
-        setTimeout(() => {
-            messageDiv.style.animation = 'slideOut 0.3s ease-out';
-            setTimeout(() => {
-                document.body.removeChild(messageDiv);
-            }, 300);
-        }, 3000);
-    };
-
-    // Add CSS for message animations
+function initToastStyles() {
     const style = document.createElement('style');
     style.textContent = `
         @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(110%); opacity: 0; }
+            to   { transform: translateX(0);    opacity: 1; }
         }
-        
         @keyframes slideOut {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(100%);
-                opacity: 0;
-            }
+            from { transform: translateX(0);    opacity: 1; }
+            to   { transform: translateX(110%); opacity: 0; }
         }
     `;
     document.head.appendChild(style);
-});
-
-// Booking system utilities
-class BookingSystem {
-    constructor() {
-        this.bookings = JSON.parse(localStorage.getItem('massage_bookings')) || [];
-        this.currentUser = JSON.parse(localStorage.getItem('current_user')) || null;
-    }
-
-    saveBooking(booking) {
-        booking.id = Date.now().toString();
-        booking.created_at = new Date().toISOString();
-        booking.status = 'pending';
-        
-        this.bookings.push(booking);
-        localStorage.setItem('massage_bookings', JSON.stringify(this.bookings));
-        
-        return booking;
-    }
-
-    getBookings() {
-        return this.bookings;
-    }
-
-    getBookingById(id) {
-        return this.bookings.find(booking => booking.id === id);
-    }
-
-    updateBookingStatus(id, status) {
-        const booking = this.getBookingById(id);
-        if (booking) {
-            booking.status = status;
-            booking.updated_at = new Date().toISOString();
-            localStorage.setItem('massage_bookings', JSON.stringify(this.bookings));
-            return booking;
-        }
-        return null;
-    }
-
-    deleteBooking(id) {
-        this.bookings = this.bookings.filter(booking => booking.id !== id);
-        localStorage.setItem('massage_bookings', JSON.stringify(this.bookings));
-    }
-
-    getAvailableTimeSlots(date) {
-        // Business hours: 9 AM to 8 PM
-        const timeSlots = [];
-        for (let hour = 9; hour <= 20; hour++) {
-            timeSlots.push(`${hour}:00`);
-            if (hour < 20) {
-                timeSlots.push(`${hour}:30`);
-            }
-        }
-
-        // Filter out booked slots
-        const bookedSlots = this.bookings
-            .filter(booking => booking.date === date && booking.status !== 'cancelled')
-            .map(booking => booking.time);
-
-        return timeSlots.filter(slot => !bookedSlots.includes(slot));
-    }
 }
 
-// Initialize booking system
-window.bookingSystem = new BookingSystem();
+// ── Global helpers used across pages ─────────────────────────────────────
+
+// Returns a restore function; preserves innerHTML so icon buttons keep their icons
+window.showLoading = function(button) {
+    const original = button.innerHTML;
+    button.innerHTML = 'Loading…';
+    button.disabled = true;
+    return () => { button.innerHTML = original; button.disabled = false; };
+};
+
+window.showMessage = function(message, type = 'success') {
+    const colors = { success: '#4CAF50', error: '#f44336', info: '#2196F3' };
+    const el = document.createElement('div');
+    el.textContent = message;
+    el.style.cssText = `
+        position:fixed; top:20px; right:20px; z-index:9999;
+        padding:1rem 1.5rem; border-radius:8px;
+        color:#fff; font-weight:500; font-family:inherit;
+        background:${colors[type] ?? colors.error};
+        animation:slideIn 0.3s ease-out;
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => {
+        el.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => el.remove(), 300);
+    }, 3200);
+};

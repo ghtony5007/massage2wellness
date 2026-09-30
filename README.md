@@ -155,3 +155,9 @@ The website is specifically optimized for tablet use in the admin dashboard:
 ## This project is created for demonstration purposes. All rights reserved to Massage2Wellness.
 
 **Note**: This is a demo website using LocalStorage for data persistence. In a production environment, you would need to integrate with a backend database and payment processing system.
+
+**To edit code in VS Code:**
+
+git add . ; git commit -m "message" ; git push
+
+**https://massage2wellness.web.app/**

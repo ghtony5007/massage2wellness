@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Massage2Wellness</title>
+    <meta name="description" content="Sign in to your Massage2Wellness client portal to manage appointments, or access the admin dashboard.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
     <link rel="stylesheet" href="styles/main.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;600&family=Open+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -82,7 +83,7 @@
 
                         <div class="form-group" id="clientFields" style="display: none;">
                             <div class="demo-credentials">
-                                <h4>Demo Client Credentials:</h4>
+                                <span class="demo-badge"><i class="fas fa-flask"></i> Demo Access</span>
                                 <p><strong>Email:</strong> client@demo.com</p>
                                 <p><strong>Password:</strong> client123</p>
                             </div>
@@ -90,7 +91,7 @@
 
                         <div class="form-group" id="adminFields" style="display: none;">
                             <div class="demo-credentials">
-                                <h4>Demo Admin Credentials:</h4>
+                                <span class="demo-badge"><i class="fas fa-flask"></i> Demo Access</span>
                                 <p><strong>Email:</strong> admin@massage2wellness.com</p>
                                 <p><strong>Password:</strong> admin123</p>
                             </div>
@@ -100,10 +101,58 @@
                     </form>
 
                     <div class="login-footer">
-                        <p>Don't have an account? <a href="booking.html">Book an appointment</a> to get started</p>
+                        <p id="createAccountSection" style="display:none;">
+                            New here? <a href="#" id="createAccountLink">Create an account</a>
+                        </p>
                         <div class="forgot-password">
-                            <a href="#">Forgot your password?</a>
+                            <a href="#" id="forgotPasswordLink">Forgot your password?</a>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registration Form -->
+            <div class="login-form-container" id="registerForm" style="display: none;">
+                <div class="login-form">
+                    <div class="form-header">
+                        <button class="back-btn" id="registerBackBtn">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <h2>Create Account</h2>
+                    </div>
+
+                    <form id="registrationForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="reg-firstName">First Name *</label>
+                                <input type="text" id="reg-firstName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-lastName">Last Name *</label>
+                                <input type="text" id="reg-lastName" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-email">Email *</label>
+                            <input type="email" id="reg-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-phone">Phone</label>
+                            <input type="tel" id="reg-phone">
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-password">Password *</label>
+                            <input type="password" id="reg-password" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-confirmPassword">Confirm Password *</label>
+                            <input type="password" id="reg-confirmPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+                    </form>
+
+                    <div class="login-footer">
+                        <p>Already have an account? <a href="#" id="backToLoginLink">Sign in</a></p>
                     </div>
                 </div>
             </div>
